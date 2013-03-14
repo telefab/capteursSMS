@@ -30,7 +30,7 @@ void envoyerUnMessage(float temperature){
 
         Serial.print("Attention, le seuil critique de température dans le capteur 1 a été atteint. La température y est de ");     // the SMS body
         Serial.print(temperature, 2);
-        Serial.print(" degrés.");           // Fin SMS body
+        Serial.print(" degrés celsius.");           // Fin SMS body
 
         delay(500);
         Serial.write(0x1A);       //sends ++
