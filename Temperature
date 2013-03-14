@@ -8,40 +8,42 @@ OneWire ds(BROCHE_ONEWIRE);
 
 void getTemperature (float *temp)
 {
-    byte data[9], addr[8];
-          
-    ds.reset();
-    ds.skip();
+    byte data[2], addr[8];
 
-    ds.write(0x44,1);
+    ds.search(addr);        // Cherche, reset le bus 1-Wire et sélectionne le module de température
+    ds.reset();
+    ds.select(addr); 
+
+    ds.write(0x44,1);       // On lance la mesure de température
     delay(800);
     
-    ds.reset();
-    ds.skip();
+    ds.reset();             // On reset pour envoyer maintenant la demande de lecture
+    ds.select(addr); 
     ds.write(0xBE);
-    
-    for (byte i=0 ; i<9 ; i++)
-      data[i] = ds.read();
-      
-     *temp = ((data[1] << 8) | data[0]) * 0.0625;       // Pb ici
+
+    data[0] = ds.read();    // On lit la température
+    data[1] = ds.read();      
+    *temp = ((data[1] << 8) | data[0]) * 0.0625;       // Conversion en degrés celsius
 }
 
 
 void setup() 
 {
-    Serial.begin(9600);
+    Serial.begin(9600); // Initialisation du port série
 }
 
 
 void loop () 
 {
-    float temp=0;
+    float temp=20;
 
     getTemperature (&temp);     // Demande la température
-    Serial.print("Temperature : ");     // Puis l'affiche
+    Serial.print("Temperature : ");     // Affiche la température
     Serial.print(temp);
     Serial.write(176);
     Serial.write('C');
     Serial.println();
+
+    delay (600000); // Attends 10min avant de recommencer
 }
    
