@@ -2,21 +2,26 @@ int led = 13;
 int onModulePin = 2;        // the pin to switch on the module (without press on button) 
 char phone_number[]="+33647877083";     // ********* is the number to call
 
-void switchGSMModule(){
+
+void switchGSMModule()
+{
     digitalWrite(onModulePin,HIGH);
     delay(2100);
     digitalWrite(onModulePin,LOW);
 }
 
-void setup(){
+
+void setup()
+{
     Serial.begin(115200);                // UART baud rate
     delay(2100);
     pinMode(led, OUTPUT);
     pinMode(onModulePin, OUTPUT);
- 
 }
 
-void envoyerUnMessage(float temperature){
+
+void envoyerUnMessage(float temperature)
+{
 
         switchGSMModule();                    // switches the GSM module ON
         delay(2500);
