@@ -1,0 +1,80 @@
+#include <OneWire.h>
+
+#define DS18B20 0x28
+#define BROCHE_ONEWIRE 7
+#define SEUIL_BAS 15.0
+#define SEUIL_HAUT 25.0
+
+
+// Variables capteurs
+OneWire ds(BROCHE_ONEWIRE);
+byte adresseCapteur1 [8]; // Adresse du premier capteur
+
+// Variables GSM
+int ledGSM = 13;
+int onModulePin = 2; // the pin to switch on the module (without press on button)
+char phone_number[]="+33647877083"; // ********* is the number to call
+
+// Variables générales
+float temperature=20.0;
+boolean bonne=true;
+
+
+
+void getTemperature (float *temp, byte addr[])
+{}
+
+void switchGSMModule()
+{
+    digitalWrite(onModulePin,HIGH);
+    delay(2100);
+    digitalWrite(onModulePin,LOW);
+}
+
+void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
+{}
+
+
+void setup()
+{
+    // Setup Capteurs
+    Serial.begin(9600); // Initialisation du port série
+
+    ds.reset();
+    ds.search(addresseCapteur1); // Recherche et stock l'adresse du capteur 1
+
+    // Setup GSM
+    Serial.begin(115200); // UART baud rate
+    delay(2100);
+    pinMode(ledGSM, OUTPUT);
+    pinMode(onModulePin, OUTPUT);
+}
+
+
+void loop ()
+{
+    getTemperature (&temperature, adresseCapteur1);                         // Demande la température du capteur 1
+
+
+    if (bonne & ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT)))    // On sort de l'intervalle acceptable 
+    {
+        getTemperature (&temperature, adresseCapteur1);
+        if ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT))         // Seconde vérification
+        {
+            envoyerUnMessage (temperature,false);
+            bonne=false;
+        }
+    }
+    else if (!bonne & (temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
+    {
+        getTemperature (&temperature, adresseCapteur1);
+        if ((temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))         // Seconde vérification
+        {
+            envoyerUnMessage (temperature,true);
+            bonne=true;
+        }
+    }
+
+    delay (600000); // Attends 10 min avant de recommencer
+}
+
