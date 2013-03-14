@@ -4,13 +4,13 @@ char phone_number[]="+33647877083";     // ********* is the number to call
 
 void switchGSMModule(){
     digitalWrite(onModulePin,HIGH);
-    delay(2000);
+    delay(2100);
     digitalWrite(onModulePin,LOW);
 }
 
 void setup(){
     Serial.begin(115200);                // UART baud rate
-    delay(2000);
+    delay(2100);
     pinMode(led, OUTPUT);
     pinMode(onModulePin, OUTPUT);
  
@@ -26,9 +26,12 @@ void envoyerUnMessage(float temperature){
         Serial.print("AT+CMGS=\"");     // send the SMS number
         Serial.print(phone_number);
         Serial.print("\"\r\n");
-        while(Serial.read()!='>');      
-        Serial.print("La temperature est de : ");     // the SMS body
+        while(Serial.read()!='>');  
+
+        Serial.print("Attention, le seuil critique de température dans le capteur 1 a été atteint. La température y est de ");     // the SMS body
         Serial.print(temperature, 2);
+        Serial.print(" degrés.");           // Fin SMS body
+
         delay(500);
         Serial.write(0x1A);       //sends ++
         Serial.write(0x0D);
@@ -43,5 +46,5 @@ void loop()
     float temperature = 1.0;
     envoyerUnMessage(temperature);
     
-    delay(10000000000000000);
+    delay(100000000);
 }
