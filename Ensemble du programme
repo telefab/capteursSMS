@@ -38,7 +38,6 @@ void setup()
 {
     // Setup Capteurs
     Serial.begin(9600);             // Initialisation du port série
-
     ds.reset();
     ds.search(addresseCapteur1);    // Recherche et stock l'adresse du capteur 1
 
