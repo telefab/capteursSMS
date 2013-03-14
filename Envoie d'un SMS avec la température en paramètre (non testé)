@@ -1,6 +1,6 @@
 int led = 13;
 int onModulePin = 2;        // the pin to switch on the module (without press on button) 
-char phone_number[]="0647877083";     // ********* is the number to call
+char phone_number[]="+33647877083";     // ********* is the number to call
 
 void switchGSMModule(){
     digitalWrite(onModulePin,HIGH);
@@ -25,7 +25,7 @@ void envoyerUnMessage(float temperature){
         
         Serial.print("AT+CMGS=\"");     // send the SMS number
         Serial.print(phone_number);
-        Serial.println("\"");
+        Serial.print("\"\r\n");
         while(Serial.read()!='>');      
         Serial.print("La temperature est de : ");     // the SMS body
         Serial.print(temperature, 2);
