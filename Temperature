@@ -1,6 +1,6 @@
-# include <Onewire.h> 
-# define DS18B20 0x28
-# define BROCHE_ONEWIRE 7
+#include <OneWire.h>
+#define DS18B20 0x28
+#define BROCHE_ONEWIRE 7
 
 OneWire ds(BROCHE_ONEWIRE);
 
@@ -8,20 +8,21 @@ OneWire ds(BROCHE_ONEWIRE);
 boolean getTemperature (float *temp){
     byte data[9], addr[8];
     
+      
     ds.reset();
-    ds.select(addr);
+    ds.skip();
 
-    ds.wire(0x44,1);
+    ds.write(0x44,1);
     delay(800);
     
     ds.reset();
-    ds.select(addr);
+    ds.skip();
     ds.write(0xBE);
     
     for (byte i = 0;i<9;i++)
       data[i] = ds.read();
       
-     *temp = ((data[i]<<8) | data[0]) * 0.0625;
+     *temp = ((data[1] << 8) | data[0]) * 0.0625;
      return true;
 }
 
@@ -39,3 +40,4 @@ void loop () {
     Serial.println();
   }
 }
+   
