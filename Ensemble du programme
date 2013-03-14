@@ -34,7 +34,6 @@ void switchGSMModule()
 void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
 {}
 
-
 void setup()
 {
     // Setup Capteurs
@@ -49,7 +48,6 @@ void setup()
     pinMode(ledGSM, OUTPUT);
     pinMode(onModulePin, OUTPUT);
 }
-
 
 void loop ()
 {
