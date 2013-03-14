@@ -2,13 +2,14 @@
 #define DS18B20 0x28
 #define BROCHE_ONEWIRE 7
 
+
 OneWire ds(BROCHE_ONEWIRE);
 
 
-boolean getTemperature (float *temp){
+boolean getTemperature (float *temp)
+{
     byte data[9], addr[8];
-    
-      
+          
     ds.reset();
     ds.skip();
 
@@ -19,25 +20,30 @@ boolean getTemperature (float *temp){
     ds.skip();
     ds.write(0xBE);
     
-    for (byte i = 0;i<9;i++)
+    for (byte i=0 ; i<9 ; i++)
       data[i] = ds.read();
       
      *temp = ((data[1] << 8) | data[0]) * 0.0625;
      return true;
 }
 
-void setup() {
-  Serial.begin(9600);
+
+void setup() 
+{
+    Serial.begin(9600);
 }
 
-void loop () {
-  float temp;
-  if(getTemperature(&temp)){
-    Serial.print("Temperature : ");
-    Serial.print(temp);
-    Serial.write(176);
-    Serial.write('C');
-    Serial.println();
-  }
+
+void loop () 
+{
+    float temp;
+    if(getTemperature(&temp))
+    {
+        Serial.print("Temperature : ");
+        Serial.print(temp);
+        Serial.write(176);
+        Serial.write('C');
+        Serial.println();
+    }
 }
    
