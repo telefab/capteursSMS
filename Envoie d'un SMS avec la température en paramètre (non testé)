@@ -35,7 +35,7 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
         if (!intervalle)                    // SMS body, deux possibilités
         Serial.print("Attention, le seuil critique de température dans le capteur 1 a été atteint. La température y est de ");
         else
-        Serial.print("La températeur est de nouveau acceptable. Elle est de ");
+        Serial.print("La température est de nouveau acceptable. Elle est de ");
 
         Serial.print(temp, 2);
         Serial.print(" degrés celsius.");           // Fin SMS body
