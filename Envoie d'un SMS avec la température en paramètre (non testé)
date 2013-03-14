@@ -1,0 +1,47 @@
+int led = 13;
+int onModulePin = 2;        // the pin to switch on the module (without press on button) 
+char phone_number[]="0647877083";     // ********* is the number to call
+
+void switchGSMModule(){
+    digitalWrite(onModulePin,HIGH);
+    delay(2000);
+    digitalWrite(onModulePin,LOW);
+}
+
+void setup(){
+    Serial.begin(115200);                // UART baud rate
+    delay(2000);
+    pinMode(led, OUTPUT);
+    pinMode(onModulePin, OUTPUT);
+ 
+}
+
+void envoyerUnMessage(float temperature){
+
+        switchGSMModule();                    // switches the GSM module ON
+        delay(2500);
+        Serial.println("AT+CMGF=1");         // sets the SMS mode to text
+        delay(1600);
+        
+        Serial.print("AT+CMGS=\"");     // send the SMS number
+        Serial.print(phone_number);
+        Serial.println("\"");
+        while(Serial.read()!='>');      
+        Serial.print("La temperature est de : ");     // the SMS body
+        Serial.print(temperature, 2);
+        delay(500);
+        Serial.write(0x1A);       //sends ++
+        Serial.write(0x0D);
+        Serial.write(0x0A);
+        delay(5000);
+        switchGSMModule();       // switch OFF module GSM
+}
+
+
+void loop()
+{
+    float temperature = 1.0;
+    envoyerUnMessage(temperature);
+    
+    delay(10000000000000000);
+}
