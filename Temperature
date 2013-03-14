@@ -4,15 +4,15 @@
 
 
 OneWire ds(BROCHE_ONEWIRE);
+byte adresseCapteur1 [8];
 
 
-void getTemperature (float *temp)
+void getTemperature (float *temp, byte addr[])
 {
-    byte data[2], addr[8];
+    byte data[2];
 
-    ds.search(addr);        // Cherche, reset le bus 1-Wire et sélectionne le module de température
     ds.reset();
-    ds.select(addr); 
+    ds.select(addr);        // Sélectionne le capteur de température
 
     ds.write(0x44,1);       // On lance la mesure de température
     delay(800);
@@ -29,7 +29,10 @@ void getTemperature (float *temp)
 
 void setup() 
 {
-    Serial.begin(9600); // Initialisation du port série
+    Serial.begin(9600);     // Initialisation du port série
+
+    ds.reset();
+    ds.search(addresseCapteur1); // Recherche et stock l'adresse du capteur 1
 }
 
 
@@ -37,13 +40,13 @@ void loop ()
 {
     float temp=20;
 
-    getTemperature (&temp);     // Demande la température
-    Serial.print("Temperature : ");     // Affiche la température
+    getTemperature (&temp, adresseCapteur1);     // Demande la température
+    Serial.print("Temperature : ");             // Affiche la température
     Serial.print(temp);
     Serial.write(176);
     Serial.write('C');
     Serial.println();
 
-    delay (600000); // Attends 10min avant de recommencer
+    delay (10000); // Attends 10sec avant de recommencer
 }
    
