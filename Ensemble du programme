@@ -8,11 +8,11 @@
 
 // Variables capteurs
 OneWire ds(BROCHE_ONEWIRE);
-byte adresseCapteur1 [8]; // Adresse du premier capteur
+byte adresseCapteur1 [8];       // Adresse du premier capteur
 
 // Variables GSM
 int ledGSM = 13;
-int onModulePin = 2; // the pin to switch on the module (without press on button)
+int onModulePin = 2;            // the pin to switch on the module (without press on button)
 char phone_number[]="+33647877083"; // ********* is the number to call
 
 // Variables générales
@@ -38,13 +38,13 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
 void setup()
 {
     // Setup Capteurs
-    Serial.begin(9600); // Initialisation du port série
+    Serial.begin(9600);             // Initialisation du port série
 
     ds.reset();
-    ds.search(addresseCapteur1); // Recherche et stock l'adresse du capteur 1
+    ds.search(addresseCapteur1);    // Recherche et stock l'adresse du capteur 1
 
     // Setup GSM
-    Serial.begin(115200); // UART baud rate
+    Serial.begin(115200);           // UART baud rate
     delay(2100);
     pinMode(ledGSM, OUTPUT);
     pinMode(onModulePin, OUTPUT);
