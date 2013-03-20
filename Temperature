@@ -44,7 +44,7 @@ void loop ()
 
     Serial.print("Temperature : ");             // Affiche la température
     Serial.print(temp);
-    Serial.write(176);
+    Serial.write('°');
     Serial.write('C');
     Serial.println();
 
