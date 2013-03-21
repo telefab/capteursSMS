@@ -19,9 +19,9 @@ void getTemperature (float *temp, byte addr[])
     
     ds.reset();             // Reset pour envoyer maintenant la demande de lecture
     ds.select(addr); 
-    ds.write(0xBE);
+    ds.write(0xBE);         // Demande de lecture du scratchpad
 
-    data[0] = ds.read();    // Lit la température
+    data[0] = ds.read();    // Lit les 2 premiers octets du scratchpad sur lesquels est scontenue la température
     data[1] = ds.read();      
     *temp = ((data[1] << 8) | data[0]) * 0.0625;       // Conversion en degrés celsius
 }
