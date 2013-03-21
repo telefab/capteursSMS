@@ -14,16 +14,14 @@
 // Variables capteurs
 OneWire ds(BROCHE_ONEWIRE);
 byte adresseCapteur1 [8];           // Adresse du premier capteur
+float temperatureCapteur1=20.0;
+boolean intervalleCapteur1=true;
 
 // Variables GSM
 SoftwareSerial GPRS(7,8);           // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
 int ledGSM = 13;
 int onModulePin = 9;                // the pin to switch on the module (without press on button)
 char phone_number[]="+33647877083"; // ********* is the number to call
-
-// Variables générales
-float temperature=20.0;
-boolean intervalle=true;
 
 
 
@@ -105,30 +103,30 @@ void setup()
 
 void loop ()
 {
-    getTemperature (&temperature, adresseCapteur1);                                 // Demande la température du capteur 1
+    getTemperature (&temperatureCapteur1, adresseCapteur1);                                                 // Demande la température du capteur 1
 
 
-    if (intervalle & ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
+    if (intervalleCapteur1 & ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
     {
-        delay (60000);                                                              // Attente d'une minute
-        getTemperature (&temperature, adresseCapteur1);
-        if ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT))                 // Seconde vérification
+        delay (60000);                                                                                      // Attente d'une minute
+        getTemperature (&temperatureCapteur1, adresseCapteur1);
+        if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))                         // Seconde vérification
         {
-            envoyerUnMessage (temperature,false);
-            intervalle=false;
+            envoyerUnMessage (temperatureCapteur1,false);
+            intervalleCapteur1=false;
         }
     }
-    else if (!intervalle & (temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
+    else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
     {
-        delay (60000);                                                              // Attente d'une minute
-        getTemperature (&temperature, adresseCapteur1);
-        if ((temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))                 // Seconde vérification
+        delay (60000);                                                                                      // Attente d'une minute
+        getTemperature (&temperatureCapteur1, adresseCapteur1);
+        if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))                         // Seconde vérification
         {
-            envoverUnMessage (temperature,true);
-            intervalle=true;
+            envoverUnMessage (temperatureCapteur1,true);
+            intervalleCapteur1=true;
         }
     }
 
-    delay (600000);                                                                 // Attends 10 min avant de recommencer
+    delay (600000);                                                                                         // Attends 10 min avant de recommencer
 }
 
