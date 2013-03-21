@@ -5,7 +5,6 @@
 #define SEUIL_BAS 15.0
 #define SEUIL_HAUT 25.0
 
-
 // Variables capteurs
 OneWire ds(BROCHE_ONEWIRE);
 byte adresseCapteur1 [8];       // Adresse du premier capteur
@@ -22,7 +21,23 @@ boolean bonne=true;
 
 
 void getTemperature (float *temp, byte addr[])
-{}
+{
+    byte data[2];
+
+    ds.reset();
+    ds.select(addr);                // Sélectionne le capteur de température
+
+    ds.write(0x44,1);               // Lance la mesure de température
+    delay(800);
+    
+    ds.reset();                     // Reset pour envoyer maintenant la demande de lecture
+    ds.select(addr);
+    ds.write(0xBE);                 // Demande de lecture du scratchpad
+
+    data[0] = ds.read();            // Lit les 2 premiers octets du scratchpad sur lesquels est contenue la température
+    data[1] = ds.read();
+    *temp = ((data[1] << 8) | data[0]) * 0.0625; // Conversion en degrés celsius
+}
 
 void switchGSMModule()
 {
