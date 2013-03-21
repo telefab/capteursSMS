@@ -71,7 +71,7 @@ void envoyerUnMessage(const float temp, const boolean intervalle)       // "inte
     {
         GPRS.print("Attention, le seuil critique de temperature ");
         GPRS.print("dans le capteur 1 a ete atteint. La temperature");
-        GPRS.print("est de ");
+        GPRS.print(" est de ");
     }
     else
     {
