@@ -1,4 +1,10 @@
+// Modifier Buffer Arduino : dans un terminal entrer la commande : sudo vi /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
+// puis touche "ENTREE"
+// modifier la valeur de MAX_RX_BUFF à 256
+// q:q! pour quitter et enregistrer
+
 #include <OneWire.h>
+#include <SoftwareSerial.h>
 
 #define DS18B20 0x28
 #define BROCHE_ONEWIRE 7
@@ -7,20 +13,21 @@
 
 // Variables capteurs
 OneWire ds(BROCHE_ONEWIRE);
-byte adresseCapteur1 [8];       // Adresse du premier capteur
+byte adresseCapteur1 [8];           // Adresse du premier capteur
 
 // Variables GSM
+SoftwareSerial GPRS(7,8);           // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
 int ledGSM = 13;
-int onModulePin = 2;            // the pin to switch on the module (without press on button)
+int onModulePin = 9;                // the pin to switch on the module (without press on button)
 char phone_number[]="+33647877083"; // ********* is the number to call
 
 // Variables générales
 float temperature=20.0;
-boolean bonne=true;
+boolean intervalle=true;
 
 
 
-void getTemperature (float *temp, byte addr[])
+void getTemperature (float *temp, const byte addr[])
 {
     byte data[2];
 
@@ -46,49 +53,82 @@ void switchGSMModule()
     digitalWrite(onModulePin,LOW);
 }
 
-void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
-{}
+void envoyerUnMessage(const float temp, const boolean intervalle)       // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
+{
+    switchGSMModule();                                      // switches the GSM module ON
+    delay(500);
+    GPRS.print("AT+CPIN=\"0000\"\r\n");                     // Entrer le code PIN
+    delay(10000);                                           // Attente de l'établissement du réseau
+  
+    GPRS.print("AT+CMGF=1\r\n");                            // Sets the SMS mode to text
+    delay(1600);
+
+    GPRS.print("AT+CMGS=\"");                               // Send the SMS number
+    GPRS.print(phone_number);
+    GPRS.print("\"\r\n");
+    while(GPRS.read()!='>');
+    if (!intervalle)                                        // SMS body, deux possibilités
+    {
+        GPRS.print("Attention, le seuil critique de temperature ");
+        GPRS.print("dans le capteur 1 a ete atteint. La temperature");
+        GPRS.print("y est de ");
+    }
+    else
+    {
+        GPRS.print("La temperature est de nouveau acceptable. Elle est de ");
+    }
+    GPRS.print(temp, 2);
+    GPRS.print(" degres celsius.");                         // Fin SMS body
+
+    delay(500);
+    GPRS.write(0x1A);                                       // Sends ++
+    GPRS.write(0x0D);
+    GPRS.write(0x0A);
+    
+    delay(10000);
+    switchGSMModule();                                      // Switch OFF module GSM
+}
 
 void setup()
 {
     // Setup Capteurs
-    Serial.begin(9600);             // Initialisation du port série
+    Serial.begin(9600);                                     // Initialisation du port série
     ds.reset();
-    ds.search(adresseCapteur1);    // Recherche et stock l'adresse du capteur 1
+    ds.search(adresseCapteur1);                             // Recherche et stock l'adresse du capteur 1
 
     // Setup GSM
-    Serial.begin(115200);           // UART baud rate
-    delay(2100);
+    gprs.begin(19200);                                      // UART baud GSM rate
+    delay(100);
     pinMode(ledGSM, OUTPUT);
     pinMode(onModulePin, OUTPUT);
 }
 
 void loop ()
 {
-    getTemperature (&temperature, adresseCapteur1);                         // Demande la température du capteur 1
+    getTemperature (&temperature, adresseCapteur1);                                 // Demande la température du capteur 1
 
 
-    if (bonne & ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT)))    // On sort de l'intervalle acceptable 
+    if (intervalle & ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
     {
-        delay (60000);                                                      // Attente d'une minute
+        delay (60000);                                                              // Attente d'une minute
         getTemperature (&temperature, adresseCapteur1);
-        if ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT))         // Seconde vérification
+        if ((temperature < SEUIL_BAS) | (temperature > SEUIL_HAUT))                 // Seconde vérification
         {
             envoyerUnMessage (temperature,false);
-            bonne=false;
+            intervalle=false;
         }
     }
-    else if (!bonne & (temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
+    else if (!intervalle & (temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
     {
-        delay (60000);                                                      // Attente d'une minute
+        delay (60000);                                                              // Attente d'une minute
         getTemperature (&temperature, adresseCapteur1);
-        if ((temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))         // Seconde vérification
+        if ((temperature > SEUIL_BAS) & (temperature < SEUIL_HAUT))                 // Seconde vérification
         {
-            envoyerUnMessage (temperature,true);
-            bonne=true;
+            envoverUnMessage (temperature,true);
+            intervalle=true;
         }
     }
 
-    delay (600000); // Attends 10 min avant de recommencer
+    delay (600000);                                                                 // Attends 10 min avant de recommencer
 }
 
