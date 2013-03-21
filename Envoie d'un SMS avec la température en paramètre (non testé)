@@ -33,7 +33,7 @@ void setup()
 void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
 {
   switchGSMModule();                              // switches the GSM module ON
-  delay(2500);
+  delay(500);
   GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
   Serial.print("AT+CPIN=\"0000\"\r\n");        // Affichage réponse sur ordinateur 
   while (!GPRS.available());
@@ -65,7 +65,7 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
   {               
     GPRS.print("Attention, le seuil critique de temperature ");
     GPRS.print("dans le capteur 1 a ete atteint. La temperature");
-    GPRS.print("y est de ");
+    GPRS.print(" est de ");
   } 
   else 
   {
