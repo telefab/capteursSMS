@@ -1,15 +1,15 @@
-// Modifier buffer Arduino : dans un terminal entrer la commande :  sudo vi /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
-//                           puis touche "ENTREE"
+// Modifier Buffer Arduino :  dans un terminal entrer la commande :  sudo vi /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
+//                            puis touche "ENTREE"
 //                            modifier la valeur de MAX_RX_BUFF à 256
 //                            q:q! pour quitter et enregistrer
 
 #include <SoftwareSerial.h>
 
-SoftwareSerial GPRS(7,8);                // GPRS : relatif au capteur ; Serial : relatif à l'ordinateur
-int led = 13;
+SoftwareSerial GPRS(7,8);                // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
+int ledGSM = 13;
 int onModulePin = 9;                    // the pin to switch on the module (without press on button) 
 char phone_number[]="+33647877083";     // ********* is the number to call
-boolean done = false;
+boolean messageEnvoye = false;
 
 
 void switchGSMModule()
@@ -25,7 +25,7 @@ void setup()
   Serial.begin(19200);                // UART baud rate
   GPRS.begin(19200);
   delay(100);
-  pinMode(led, OUTPUT);
+  pinMode(ledGSM, OUTPUT);
   pinMode(onModulePin, OUTPUT);
 }
 
@@ -34,14 +34,14 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
 {
   switchGSMModule();                              // switches the GSM module ON
   delay(2500);
-  GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN*
+  GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
   Serial.print("AT+CPIN=\"0000\"\r\n");        // Affichage réponse sur ordinateur 
   while (!GPRS.available());
   while (GPRS.available())
   {
     Serial.write(GPRS.read());
   }
-  delay(10000);
+  delay(10000);                               // Attente de l'établissement du réseau
   while (!GPRS.available());
   while (GPRS.available()) 
   {
@@ -61,7 +61,6 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
   GPRS.print("\"\r\n");
   while(GPRS.read()!='>');  
 
-
   if (!intervalle)                             // SMS body, deux possibilités
   {               
     GPRS.print("Attention, le seuil critique de temperature ");
@@ -73,10 +72,10 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
     GPRS.print("La temperature est de nouveau acceptable. Elle est de ");
   }
   GPRS.print(temp, 2);
-  GPRS.print(" degres celsius.");        // Fin SMS body
+  GPRS.print(" degres celsius.");           // Fin SMS body
 
   delay(500);
-  GPRS.write(0x1A);                     //sends ++
+  GPRS.write(0x1A);                         // Sends ++
   GPRS.write(0x0D);
   GPRS.write(0x0A);
   while (!GPRS.available());
@@ -91,16 +90,16 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
   {
     Serial.write(GPRS.read());
   }
-  switchGSMModule();                   // switch OFF module GSM
+  switchGSMModule();                      // Switch OFF module GSM
 }
 
 
 void loop()
 {
   float temperature = 14.0;
-  if (!done) 
+  if (!messageEnvoye) 
   {
     envoyerUnMessage(temperature, false);
-    done = true;
+    messageEnvoye = true;
   }
 }
