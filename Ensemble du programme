@@ -95,7 +95,7 @@ void setup()
     ds.search(adresseCapteur1);                             // Recherche et stock l'adresse du capteur 1
 
     // Setup GSM
-    gprs.begin(19200);                                      // UART baud GSM rate
+    GPRS.begin(19200);                                      // UART baud GSM rate
     delay(100);
     pinMode(ledGSM, OUTPUT);
     pinMode(onModulePin, OUTPUT);
@@ -122,7 +122,7 @@ void loop ()
         getTemperature (&temperatureCapteur1, adresseCapteur1);
         if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))                         // Seconde vérification
         {
-            envoverUnMessage (temperatureCapteur1,true);
+            envoyerUnMessage (temperatureCapteur1,true);
             intervalleCapteur1=true;
         }
     }
