@@ -14,7 +14,7 @@
 // Variables capteurs
 OneWire ds(BROCHE_ONEWIRE);
 byte adresseCapteur1 [8];           // Adresse du premier capteur
-float temperatureCapteur1=20.0;
+float temperatureCapteur1= (SEUIL_BAS + SEUIL_HAUT) / 2;
 boolean intervalleCapteur1=true;
 
 // Variables GSM
@@ -51,40 +51,40 @@ void switchGSMModule()
     digitalWrite(onModulePin,LOW);
 }
 
-void envoyerUnMessage(const float temp, const boolean intervalle)       // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
+void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
 {
-    switchGSMModule();                                      // switches the GSM module ON
-    delay(500);
-    GPRS.print("AT+CPIN=\"0000\"\r\n");                     // Entrer le code PIN
-    delay(10000);                                           // Attente de l'établissement du réseau
-  
-    GPRS.print("AT+CMGF=1\r\n");                            // Sets the SMS mode to text
-    delay(1600);
-
-    GPRS.print("AT+CMGS=\"");                               // Send the SMS number
-    GPRS.print(phone_number);
-    GPRS.print("\"\r\n");
-    while(GPRS.read()!='>');
-    if (!intervalle)                                        // SMS body, deux possibilités
-    {
-        GPRS.print("Attention, le seuil critique de temperature ");
-        GPRS.print("dans le capteur 1 a ete atteint. La temperature");
-        GPRS.print(" est de ");
-    }
-    else
-    {
-        GPRS.print("La temperature est de nouveau acceptable. Elle est de ");
-    }
-    GPRS.print(temp, 2);
-    GPRS.print(" degres celsius.");                         // Fin SMS body
-
-    delay(500);
-    GPRS.write(0x1A);                                       // Sends ++
-    GPRS.write(0x0D);
-    GPRS.write(0x0A);
+  switchGSMModule();                              // switches the GSM module ON
+  delay(500);
+  GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
+  delay(10000);                               // Attente de l'établissement du réseau
     
-    delay(10000);
-    switchGSMModule();                                      // Switch OFF module GSM
+  GPRS.print("AT+CMGF=1\r\n");                 // sets the SMS mode to text
+  delay(1600);
+
+  GPRS.print("AT+CMGS=\"");                     // send the SMS number
+  GPRS.print(phone_number);
+  GPRS.print("\"\r\n");
+  while(GPRS.read()!='>');  
+  if (!intervalle)                             // SMS body, deux possibilités
+  {               
+    GPRS.print("Attention, le seuil critique de temperature ");
+    GPRS.print("dans le capteur 1 a ete atteint. La temperature");
+    GPRS.print(" est de ");
+  } 
+  else 
+  {
+    GPRS.print("La temperature est de nouveau acceptable. Elle est de ");
+  }
+  GPRS.print(temp, 2);
+  GPRS.print(" degres celsius.");           // Fin SMS body
+
+  delay(500);
+  GPRS.write(0x1A);                         // Sends ++
+  GPRS.write(0x0D);
+  GPRS.write(0x0A);
+  delay(10000);
+
+  switchGSMModule();                      // Switch OFF module GSM
 }
 
 void setup()
