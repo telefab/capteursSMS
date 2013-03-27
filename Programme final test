@@ -1,0 +1,175 @@
+// Modifier Buffer Arduino : dans un terminal entrer la commande : sudo vi /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
+// puis touche "ENTREE"
+// modifier la valeur de MAX_RX_BUFF à 256
+// q:q! pour quitter et enregistrer
+
+#include <OneWire.h>
+#include <SoftwareSerial.h>
+
+#define DS18B20 0x28
+#define BROCHE_ONEWIRE 7
+#define SEUIL_BAS 15.0
+#define SEUIL_HAUT 25.0
+
+// Variables capteurs
+OneWire ds(BROCHE_ONEWIRE);
+byte adresseCapteur1 [8];           // Adresse du premier capteur
+float temperatureCapteur1= (SEUIL_BAS + SEUIL_HAUT) /2;
+boolean intervalleCapteur1=true;
+
+// Variables GSM
+SoftwareSerial GPRS(7,8);           // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
+int ledGSM = 13;
+int onModulePin = 9;                // the pin to switch on the module (without press on button)
+char phone_number[]="+33647877083"; // ********* is the number to call
+
+
+
+void getTemperature (float *temp, const byte addr[])
+{
+    byte data[2];
+
+    ds.reset();
+    ds.select(addr);                // Sélectionne le capteur de température
+
+    ds.write(0x44,1);               // Lance la mesure de température
+    delay(800);
+    
+    ds.reset();                     // Reset pour envoyer maintenant la demande de lecture
+    ds.select(addr);
+    ds.write(0xBE);                 // Demande de lecture du scratchpad
+
+    data[0] = ds.read();            // Lit les 2 premiers octets du scratchpad sur lesquels est contenue la température
+    data[1] = ds.read();
+    *temp = ((data[1] << 8) | data[0]) * 0.0625; // Conversion en degrés celsius
+}
+
+void switchGSMModule()
+{
+    digitalWrite(onModulePin,HIGH);
+    delay(2100);
+    digitalWrite(onModulePin,LOW);
+}
+
+void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
+{
+  switchGSMModule();                              // switches the GSM module ON
+  delay(500);
+  GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
+  Serial.print("AT+CPIN=\"0000\"\r\n");        // Affichage réponse sur ordinateur 
+  while (!GPRS.available());
+  while (GPRS.available())
+  {
+    Serial.write(GPRS.read());
+  }
+  delay(10000);                               // Attente de l'établissement du réseau
+  while (!GPRS.available());
+  while (GPRS.available()) 
+  {
+    Serial.write(GPRS.read());
+  }
+  
+  GPRS.print("AT+CMGF=1\r\n");                 // sets the SMS mode to text
+  while (!GPRS.available());
+  while (GPRS.available()) 
+  {
+    Serial.write(GPRS.read());
+  }
+  delay(1600);
+
+  GPRS.print("AT+CMGS=\"");                     // send the SMS number
+  GPRS.print(phone_number);
+  GPRS.print("\"\r\n");
+  while(GPRS.read()!='>');  
+
+  if (!intervalle)                             // SMS body, deux possibilités
+  {               
+    GPRS.print("Attention, le seuil critique de temperature ");
+    GPRS.print("dans le capteur 1 a ete atteint. La temperature");
+    GPRS.print(" est de ");
+  } 
+  else 
+  {
+    GPRS.print("La temperature est de nouveau acceptable. Elle est de ");
+  }
+  GPRS.print(temp, 2);
+  GPRS.print(" degres celsius.");           // Fin SMS body
+
+  delay(500);
+  GPRS.write(0x1A);                         // Sends ++
+  GPRS.write(0x0D);
+  GPRS.write(0x0A);
+  while (!GPRS.available());
+  while (GPRS.available()) 
+  {
+    Serial.write(GPRS.read());
+  }
+  
+  delay(10000);
+  while (!GPRS.available());
+  while (GPRS.available()) 
+  {
+    Serial.write(GPRS.read());
+  }
+  switchGSMModule();                      // Switch OFF module GSM
+}
+
+
+void setup()
+{
+    // Setup Capteurs
+    Serial.begin(9600);                                     // Initialisation du port série
+    ds.reset();
+    ds.search(adresseCapteur1);                             // Recherche et stock l'adresse du capteur 1
+
+    // Setup GSM
+    GPRS.begin(19200);                                      // UART baud GSM rate
+    delay(100);
+    pinMode(ledGSM, OUTPUT);
+    pinMode(onModulePin, OUTPUT);
+}
+
+void loop ()
+{
+    getTemperature (&temperatureCapteur1, adresseCapteur1);                                                 // Demande la température du capteur 1
+    Serial.print("Temperature : ");             // Affiche la température
+    Serial.print(temperatureCapteur1);
+    Serial.write('°');
+    Serial.write('C');
+    Serial.println();
+
+    if (intervalleCapteur1 & ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
+    {
+        delay (6000);                                                                                      // Attente de 6s
+        getTemperature (&temperatureCapteur1, adresseCapteur1);
+        Serial.print("Temperature : ");             // Affiche la température
+        Serial.print(temperatureCapteur1);
+        Serial.write('°');
+        Serial.write('C');
+        Serial.println();
+
+        if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))                         // Seconde vérification
+        {
+            envoyerUnMessage (temperatureCapteur1,false);
+            intervalleCapteur1=false;
+        }
+    }
+    else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
+    {
+        delay (6000);                                                                                      // Attente de 6s
+        getTemperature (&temperatureCapteur1, adresseCapteur1);
+        Serial.print("Temperature : ");             // Affiche la température
+        Serial.print(temperatureCapteur1);
+        Serial.write('°');
+        Serial.write('C');
+        Serial.println();
+
+        if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))                         // Seconde vérification
+        {
+            envoyerUnMessage (temperatureCapteur1,true);
+            intervalleCapteur1=true;
+        }
+    }
+
+    delay (30000);                                                                                         // Attends 30s avant de recommencer
+}
