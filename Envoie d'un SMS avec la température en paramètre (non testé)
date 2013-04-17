@@ -41,7 +41,7 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
   {
     Serial.write(GPRS.read());
   }
-  delay(10000);                               // Attente de l'établissement du réseau
+  delay(20000);                               // Attente de l'établissement du réseau
   while (!GPRS.available());
   while (GPRS.available()) 
   {
@@ -84,7 +84,7 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
     Serial.write(GPRS.read());
   }
   
-  delay(10000);
+  delay(20000);
   while (!GPRS.available());
   while (GPRS.available()) 
   {
