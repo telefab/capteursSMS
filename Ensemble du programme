@@ -56,7 +56,7 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
   switchGSMModule();                              // switches the GSM module ON
   delay(500);
   GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
-  delay(10000);                               // Attente de l'établissement du réseau
+  delay(20000);                               // Attente de l'établissement du réseau
     
   GPRS.print("AT+CMGF=1\r\n");                 // sets the SMS mode to text
   delay(1600);
@@ -82,7 +82,7 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
   GPRS.write(0x1A);                         // Sends ++
   GPRS.write(0x0D);
   GPRS.write(0x0A);
-  delay(10000);
+  delay(20000);
 
   switchGSMModule();                      // Switch OFF module GSM
 }
