@@ -10,6 +10,8 @@
 #define BROCHE_ONEWIRE 7
 #define SEUIL_BAS 15.0
 #define SEUIL_HAUT 25.0
+#define TEMPS_ATTENTE 600
+#define TEMPS_ATTENTE_SECURITE 60
 
 // Variables capteurs
 OneWire ds(BROCHE_ONEWIRE);
@@ -109,7 +111,7 @@ void loop ()
 
     if (intervalleCapteur1 & ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
     {
-        delay (60000);                                                                                      // Attente d'une minute
+        delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente d'une minute
         getTemperature (&temperatureCapteur1, adresseCapteur1);
         if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))                         // Seconde vérification
         {
@@ -120,7 +122,7 @@ void loop ()
     }
     else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
     {
-        delay (60000);                                                                                      // Attente d'une minute
+        delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente d'une minute
         getTemperature (&temperatureCapteur1, adresseCapteur1);
         if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))                         // Seconde vérification
         {
@@ -130,6 +132,6 @@ void loop ()
         }
     }
 
-    delay (600000);                                                                                         // Attends 10 min avant de recommencer
+    delay (TEMPS_ATTENTE*1000);                                                                                         // Attends 10 min avant de recommencer
 }
 
