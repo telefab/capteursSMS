@@ -1,7 +1,5 @@
-// Modifier Buffer Arduino : dans un terminal entrer la commande : gedit nano /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
-// puis touche "ENTREE"
-// modifier la valeur de MAX_RX_BUFF à 256
-// control O entrée control X pour enregistrer et quitter
+// Modifier Buffer Arduino : dans un terminal entrer la commande : sudo gedit /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
+// Modifier la valeur de MAX_RX_BUFF à 256
 
 #include <OneWire.h>
 #include <SoftwareSerial.h>
