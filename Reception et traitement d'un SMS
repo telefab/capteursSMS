@@ -4,7 +4,7 @@
 #define TEMPS_ATTENTE 30     // En secondes
 
 // Serial connection to GPRS shield
-SoftwareSerial GSM(7,8); // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
+SoftwareSerial GSM(7,8); // GSM : relatif au module GSM ; Serial : relatif à l'ordinateur
 GoGprs gsm = GoGprs(&GSM);
 
 int ledGSM = 13;
