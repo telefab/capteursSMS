@@ -8,8 +8,8 @@
 #define BROCHE_ONEWIRE 7
 #define SEUIL_BAS 15.0
 #define SEUIL_HAUT 25.0
-#define TEMPS_ATTENTE 600
-#define TEMPS_ATTENTE_SECURITE 60
+#define TEMPS_ATTENTE 30
+#define TEMPS_ATTENTE_SECURITE 6
 
 // Variables capteurs
 OneWire ds(BROCHE_ONEWIRE);
