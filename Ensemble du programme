@@ -21,7 +21,7 @@ boolean intervalleCapteur1=true;
 SoftwareSerial GPRS(7,8);           // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
 int ledGSM = 13;
 int onModulePin = 9;                // the pin to switch on the module (without press on button)
-char phone_number[]="+33647877083"; // ********* is the number to call
+String phone_number="+33647877083"; // ********* is the number to call
 
 
 
