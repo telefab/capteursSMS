@@ -51,7 +51,7 @@ void switchGSMModule()
     digitalWrite(onModulePin,LOW);
 }
 
-void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
+boolean envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
 {
   switchGSMModule();                              // switches the GSM module ON
   delay(500);
@@ -112,6 +112,7 @@ void envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert 
     Serial.write(GPRS.read());
   }
   switchGSMModule();                      // Switch OFF module GSM
+  return true;
 }
 
 
@@ -150,8 +151,9 @@ void loop ()
 
         if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))                         // Seconde vérification
         {
-            envoyerUnMessage (temperatureCapteur1,false);
+            if(envoyerUnMessage (temperatureCapteur1,false)){
             intervalleCapteur1=false;
+            }
         }
     }
     else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
@@ -166,8 +168,9 @@ void loop ()
 
         if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))                         // Seconde vérification
         {
-            envoyerUnMessage (temperatureCapteur1,true);
+            if(envoyerUnMessage (temperatureCapteur1,true)){
             intervalleCapteur1=true;
+            }
         }
     }
 
