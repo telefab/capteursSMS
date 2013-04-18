@@ -1,5 +1,7 @@
 #include <SoftwareSerial.h>
-#include <GoGprs.h>       // Librairie à télécharger et installer : https://github.com/mchobby/GoGprs
+#include <GoGprs.h>           // Librairie à télécharger et installer : https://github.com/mchobby/GoGprs
+
+#define TEMPS_ATTENTE 30     // En secondes
 
 // Serial connection to GPRS shield
 SoftwareSerial GSM(7,8); // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
@@ -32,7 +34,7 @@ void setup()
 void loop()
 {
   receptionSMS();
-  delay(10000);
+  delay(TEMPS_ATTENTE*1000);
 }
 
 
