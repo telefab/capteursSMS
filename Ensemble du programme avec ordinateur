@@ -18,7 +18,7 @@ float temperatureCapteur1= (SEUIL_BAS + SEUIL_HAUT) /2;
 boolean intervalleCapteur1=true;
 
 // Variables GSM
-SoftwareSerial GSM(7,8);           // GSM : relatif au module GSM ; Serial : relatif à l'ordinateur
+SoftwareSerial GSM(7,8);           // GSM : relatif au shield GPRS ; Serial : relatif à l'ordinateur
 int ledGSM = 13;
 int onModulePin = 9;                // the pin to switch on the module (without press on button)
 String phone_number="+33647877083"; // ********* is the number to call
