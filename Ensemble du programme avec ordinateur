@@ -17,7 +17,7 @@ byte adresseCapteur1 [8];           // Adresse du premier capteur
 float temperatureCapteur1= (SEUIL_BAS + SEUIL_HAUT) /2;
 boolean intervalleCapteur1=true;
 
-// Variables GSM
+// Variables relatives au shield GPRS
 SoftwareSerial GSM(7,8);           // GSM : relatif au shield GPRS ; Serial : relatif à l'ordinateur
 int ledGSM = 13;
 int onModulePin = 9;                // the pin to switch on the module (without press on button)
