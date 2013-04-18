@@ -1,0 +1,134 @@
+#include <SoftwareSerial.h>
+#include <GoGprs.h>       // Librairie à télécharger et installer : https://github.com/mchobby/GoGprs
+
+// Serial connection to GPRS shield
+SoftwareSerial GSM(7,8); // GPRS : relatif au module GSM ; Serial : relatif à l'ordinateur
+GoGprs gsm = GoGprs(&GSM);
+
+int ledGSM = 13;
+int onModulePin = 9; // the pin to switch on the module (without press on button)
+String phone_number="+33647877083"; // ********* is the number to call
+float temperatureCapteur1 = 20.0;
+
+
+void switchGSMModule()
+{
+  digitalWrite(onModulePin,HIGH);
+  delay(2100);
+  digitalWrite(onModulePin,LOW);
+}
+
+
+void setup()
+{
+  Serial.begin(19200); // UART baud rate
+  GSM.begin(19200);
+  delay(100);
+  pinMode(ledGSM, OUTPUT);
+  pinMode(onModulePin, OUTPUT);
+}
+
+
+void loop()
+{
+  receptionSMS();
+  delay(10000);
+}
+
+
+void receptionSMS()
+{
+  switchGSMModule(); // switches the GSM module ON
+  delay(500);
+  GSM.print("AT+CPIN=\"0000\"\r\n"); // Entrer le code PIN
+  Serial.print("AT+CPIN=\"0000\"\r\n"); // Affichage réponse sur ordinateur
+  while (!GSM.available());
+  while (GSM.available())
+  {
+    Serial.write(GSM.read());
+  }
+  delay(20000); // Attente de l'établissement du réseau
+  while (!GSM.available());
+  while (GSM.available())
+  {
+    Serial.write(GSM.read());
+  }
+  
+  
+    
+  gsm.execute();                           // Pas sur que ceci soit nécessaire ?  A vérifier                     // Initialisation du module GPRS
+
+  if( gsm.isCallReady() ) {                // Vérification du réseau
+    if( gsm.hasSms() ){                    // A-t-on recu un message ?
+      String smsText = gsm.smsText();      // Corps du SMS
+      phone_number.replace(phone_number, gsm.smsCallee());    // A vérifier           // Le numéro de l'envoyeur est maintenant le numéro par défaut
+      Serial.println("Un SMS a ete recu !");
+      Serial.println( phone_number );
+      Serial.println(" : ");
+      Serial.println( smsText );
+      gsm.clearSms();                       // Reset the reception of the last SMS
+
+      traiterSMS(smsText);                // Envoi à la fonction de traitement du message recu 
+    }
+    else {
+      Serial.println("Pas de message recu.\n");
+    }
+  }
+  else {
+    Serial.println("Reseau inaccessible.\n");
+  }
+  
+  switchGSMModule();                        // Switch OFF module GSM
+}
+
+
+
+void traiterSMS(String smsText)
+{
+    if( smsText.indexOf( "temp 1" )>=0 ) // Demande d'envoie de la température du capteur 1
+    { 
+       Serial.println("Une demande de la temperature du capteur 1 a ete faite.\n");
+       envoyerUnMessageRapide (temperatureCapteur1);
+    }
+    else {     
+      Serial.println("Le message ne peut pas etre decode\n");
+    }
+}
+
+
+void envoyerUnMessageRapide(float temp)
+{
+  GSM.print("AT+CMGF=1\r\n"); // sets the SMS mode to text
+  while (!GSM.available());
+  while (GSM.available())
+  {
+    Serial.write(GSM.read());
+  }
+  delay(1600);
+
+  GSM.print("AT+CMGS=\""); // send the SMS number
+  GSM.print(phone_number);
+  GSM.print("\"\r\n");
+  while(GSM.read()!='>'); 
+  
+  GSM.print("La temperature dans le capteur 1 est de  ");
+  GSM.print(temp, 2);
+  GSM.print(" degres celsius."); // Fin SMS body
+
+  delay(500);
+  GSM.write(0x1A); // Sends ++
+  GSM.write(0x0D);
+  GSM.write(0x0A);
+  while (!GSM.available());
+  while (GSM.available())
+  {
+    Serial.write(GSM.read());
+  }
+  
+  delay(20000);
+  while (!GSM.available());
+  while (GSM.available())
+  {
+    Serial.write(GSM.read());
+  }
+}
