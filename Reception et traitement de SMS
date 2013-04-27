@@ -60,7 +60,7 @@ void receptionSMS()
   
       if( gsm.hasSms() ){ // A-t-on recu un message ?
         String smsText = gsm.smsText(); // Corps du SMS
-        phone_number.replace(phone_number, gsm.smsCallee()); // A vérifier // Le numéro de l'envoyeur est maintenant le numéro par défaut
+        phone_number = gsm.smsCallee(); // Le numéro de l'envoyeur est maintenant le numéro par défaut
         Serial.println("Un SMS a ete recu !");
         Serial.println( phone_number );        // Message renvoyé ici : AT+CMGR=30ou32
         Serial.println(" : ");
