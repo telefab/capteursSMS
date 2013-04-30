@@ -1,50 +1,52 @@
-// EN: 
-//   *** PATCHED for Arduino 1.0 ***
-//   SmsCommand - Active Pin 13 On/OFF depending on the received SMS message (on/off).
-//                This soft also send the PIN code to SIM card when appropriate.
-//   Based Serial Relay. Arduino will still patch a  serial link between the 
-//             computer and the GPRS Shield at 19200 bps 8-N-1.
+// EN:
+// *** PATCHED for Arduino 1.0 ***
+// SmsCommand - Active Pin 13 On/OFF depending on the received SMS message (on/off).
+// This soft also send the PIN code to SIM card when appropriate.
+// Based Serial Relay. Arduino will still patch a serial link between the
+// computer and the GPRS Shield at 19200 bps 8-N-1.
 //
-//   *** Configure Serial Monitor to Carriage Return, 19200 bauds ***
+// *** Configure Serial Monitor to Carriage Return, 19200 bauds ***
 //
-//   *** VERY IMPORTANT!!!                                  ***
-//   *** FOR READING SMS, DO NOT FORGET TO CHANGE           ***
-//   *** THE BUFFER SIZE OF NewSoftSerial to 128 bytes      ***
-//   ***   see line _NewSS_MAX_RX_BUFF in NewSoftSerial.h   ***
+// *** VERY IMPORTANT!!! ***
+// *** FOR READING SMS, DO NOT FORGET TO CHANGE ***
+// *** THE BUFFER SIZE OF NewSoftSerial to 128 bytes ***
+// *** see line _NewSS_MAX_RX_BUFF in NewSoftSerial.h ***
 //
 // FR:
-//   *** Version adaptée for Arduino 1.0 (ou supérieur) ***
+// *** Version adaptée for Arduino 1.0 (ou supérieur) ***
 //
-//   SmsCommand - Active la pin 13 allumer/éteindre en fonction du message (on/off) 
-//             reçu par SMS. Ce logiciel envoie également le code PIN si la carte SIM
-//             en demande un.
-//   Basé Serial Relay. Arduino maintient également une liaison série entre l'ordinateur  
-//             et le shield GPRS a 19200 bps 8-N-1.
+// SmsCommand - Active la pin 13 allumer/éteindre en fonction du message (on/off)
+// reçu par SMS. Ce logiciel envoie également le code PIN si la carte SIM
+// en demande un.
+// Basé Serial Relay. Arduino maintient également une liaison série entre l'ordinateur
+// et le shield GPRS a 19200 bps 8-N-1.
 //
-//   *** Configurer le Moniteur Serie sur Carriage Return, 19200 bauds ***
+// *** Configurer le Moniteur Serie sur Carriage Return, 19200 bauds ***
 //
-//   *** TRES IMPORTANT!!!  
-//   *** POUR LA LECTURE DES SMS, NE PAS OUBLIER DE MODIFIER              ***                
-//   ***  LA TAILLE DU BUFFER DE RECEPTION DE NewSoftSerial SUR 128 bytes ***
-//   ***   voir la ligne _NewSS_MAX_RX_BUFF dans NewSoftSerial.h          ***
-//  
-//  Pour plus d'information voir 
-//      http://mchobby.be/wiki/index.php?title=GeekOnFire_GSM/GPRS_Shield
+// *** TRES IMPORTANT!!!
+// *** POUR LA LECTURE DES SMS, NE PAS OUBLIER DE MODIFIER ***
+// *** LA TAILLE DU BUFFER DE RECEPTION DE NewSoftSerial SUR 128 bytes ***
+// *** voir la ligne _NewSS_MAX_RX_BUFF dans NewSoftSerial.h ***
 //
-//  Licence - Share-Alike - CC-BY
+// Pour plus d'information voir
+// http://mchobby.be/wiki/index.php?title=GeekOnFire_GSM/GPRS_Shield
 //
-//  Toutes toute référence, mention ou extrait de ce contenu doit être explicitement 
-//  accompagné du texte suivant : «  Traduction par MCHobby (www.MCHobby.be) - Vente de kit et composants » 
-//  et ce quelque soit le média utilisé.  
+// Licence - Share-Alike - CC-BY
 //
-//  BONNE AMUSEMENT :-)
+// Toutes toute référence, mention ou extrait de ce contenu doit être explicitement
+// accompagné du texte suivant : « Traduction par MCHobby (www.MCHobby.be) - Vente de kit et composants »
+// et ce quelque soit le média utilisé.
+//
+// BONNE AMUSEMENT :-)
 //
 #include <SoftwareSerial.h>
+
+String phone_number="+33647877083"; 
  
 SoftwareSerial mySerial(7, 8);
 
 // EN: String buffer for the GPRS shield message
-// FR: Mémoire tampon de type string pour les messages du shield GPRS 
+// FR: Mémoire tampon de type string pour les messages du shield GPRS
 String msg = String("");
 // EN: Set to 1 when the next GPRS shield message will contains the SMS message
 // FR: Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
@@ -53,11 +55,37 @@ int SmsContentFlag = 0;
 // EN: Code PIN of the SIM card (if applied)
 // FR: Code PIN de la carte SIM (si applicable)
 String SIM_PIN_CODE = String( "0000" );
+
+void envoyerUnMessage(float temp)
+{
+  delay(1000); // Attente de l'établissement du réseau
+  
+  mySerial.print("AT+CMGF=1\r\n"); // sets the SMS mode to text
+  
+  delay(1600);
+
+  mySerial.print("AT+CMGS=\""); // send the SMS number
+  mySerial.print(phone_number);
+  mySerial.print("\"\r\n");
+  while(mySerial.read()!='>');
+
+  mySerial.print("La temperature est de");
+  mySerial.print(temp, 2);
+  mySerial.print(" degres celsius."); // Fin SMS body
+
+  delay(500);
+  mySerial.write(0x1A); // Sends ++
+  mySerial.write(0x0D);
+  mySerial.write(0x0A);
+  
+  delay(20000);
+}
+
  
 void setup()
 {
-  mySerial.begin(19200);               // the GPRS baud rate   
-  Serial.begin(19200);                 // the GPRS baud rate
+  mySerial.begin(19200); // the GPRS baud rate
+  Serial.begin(19200); // the GPRS baud rate
 }
  
 void loop()
@@ -67,8 +95,8 @@ void loop()
     if(Serial.available())
     {
        mySerial.print((unsigned char)Serial.read());
-     }  
-    else  if(mySerial.available())
+     }
+    else if(mySerial.available())
     {
         char SerialInByte;
         SerialInByte = (unsigned char)mySerial.read();
@@ -83,7 +111,7 @@ void loop()
         // -------------------------------------------------------------------
         
         // EN: If the message ends with <CR> then process the message
-        // FR: Si le message se termine par un <CR> alors traiter le message 
+        // FR: Si le message se termine par un <CR> alors traiter le message
         if( SerialInByte == 13 ){
           // EN: Store the char into the message buffer
           // FR: Stocké le caractère dans le buffer de message
@@ -91,20 +119,20 @@ void loop()
          }
          if( SerialInByte == 10 ){
             // EN: Skip Line feed
-            // FR: Ignorer les Line Feed 
+            // FR: Ignorer les Line Feed
          }
          else {
            // EN: store the current character in the message string buffer
            // FR: stocker le caractère dans la mémoire tampon réservé au message
            msg += String(SerialInByte);
          }
-     }   
+     }
 }
 
-// EN: Make action based on the content of the SMS. 
-//     Notice than SMS content is the result of the processing of several GPRS shield messages.
+// EN: Make action based on the content of the SMS.
+// Notice than SMS content is the result of the processing of several GPRS shield messages.
 // FR: Execute une action sur base du contenu d'un SMS.
-//     Notez que le contenu du SMS est le résultat du traitement de plusieurs messages du shield GPRS.
+// Notez que le contenu du SMS est le résultat du traitement de plusieurs messages du shield GPRS.
 void ProcessSms( String sms ){
   Serial.print( "ProcessSms for [" );
   Serial.print( sms );
@@ -131,7 +159,7 @@ void GprsTextModeSMS(){
 
 void GprsReadSmsStore( String SmsStorePos ){
   // Serial.print( "GprsReadSmsStore for storePos " );
-  // Serial.println( SmsStorePos ); 
+  // Serial.println( SmsStorePos );
   mySerial.print( "AT+CMGR=" );
   mySerial.println( SmsStorePos );
 }
@@ -166,9 +194,9 @@ void ProcessGprsMsg() {
   if( msg.indexOf( "+CMTI" ) >= 0 ){
      Serial.println( "*** SMS Received ***" );
      // EN: Look for the coma in the full message (+CMTI: "SM",6)
-     //     In the sample, the SMS is stored at position 6
-     // FR: Rechercher la position de la virgule dans le message complet (+CMTI: "SM",6) 
-     //     Dans l'exemple, le SMS est stocké à la position 6
+     // In the sample, the SMS is stored at position 6
+     // FR: Rechercher la position de la virgule dans le message complet (+CMTI: "SM",6)
+     // Dans l'exemple, le SMS est stocké à la position 6
      int iPos = msg.indexOf( "," );
      String SmsStorePos = msg.substring( iPos+1 );
      Serial.print( "SMS stored at " );
@@ -179,7 +207,7 @@ void ProcessGprsMsg() {
      GprsReadSmsStore( SmsStorePos );
   }
   
-  // EN: SMS store readed through UART (result of GprsReadSmsStore request)  
+  // EN: SMS store readed through UART (result of GprsReadSmsStore request)
   // FR: Lecture du stockage SMS via l'UART (résultat de la requete GprsReadSmsStore)
   if( msg.indexOf( "+CMGR:" ) >= 0 ){
     // EN: Next message will contains the BODY of SMS
@@ -191,19 +219,25 @@ void ProcessGprsMsg() {
     return;
   }
   
-  // EN: +CMGR message just before indicate that the following GRPS Shield message 
-  //     (this message) will contains the SMS body
-  // FR: le message +CMGR précédent indiquait que le message suivant du Shield GPRS 
-  //     (ce message) contient le corps du SMS 
+  // EN: +CMGR message just before indicate that the following GRPS Shield message
+  // (this message) will contains the SMS body
+  // FR: le message +CMGR précédent indiquait que le message suivant du Shield GPRS
+  // (ce message) contient le corps du SMS
   if( SmsContentFlag == 1 ){
     Serial.println( "*** SMS MESSAGE CONTENT ***" );
     Serial.println( msg );
     Serial.println( "*** END OF SMS MESSAGE ***" );
+    if ( msg.indexOf( "temp 1" ) >= 0 ){
+      
+      Serial.println( "Envoi d'un message de confirmation" );
+      envoyerUnMessage(20.0);
+    }
+    
     ProcessSms( msg );
   }
   
   ClearGprsMsg();
   // EN: Always clear the flag
   // FR: Toujours mettre le flag à 0
-  SmsContentFlag = 0; 
+  SmsContentFlag = 0;
 }
