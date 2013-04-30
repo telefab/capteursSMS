@@ -41,7 +41,7 @@
 //
 #include <SoftwareSerial.h>
 
-String phone_number="+33647877083"; 
+String phone_number="+33647877083";
  
 SoftwareSerial mySerial(7, 8);
 
@@ -69,7 +69,7 @@ void envoyerUnMessage(float temp)
   mySerial.print("\"\r\n");
   while(mySerial.read()!='>');
 
-  mySerial.print("La temperature est de");
+  mySerial.print("La temperature est de ");
   mySerial.print(temp, 2);
   mySerial.print(" degres celsius."); // Fin SMS body
 
@@ -212,6 +212,9 @@ void ProcessGprsMsg() {
   if( msg.indexOf( "+CMGR:" ) >= 0 ){
     // EN: Next message will contains the BODY of SMS
     // FR: Le prochain message contiendra le contenu du SMS
+     int iPos2 = msg.indexOf( "+33" );
+     phone_number = msg.substring(iPos2, iPos2+12);
+     Serial.print(phone_number);
     SmsContentFlag = 1;
     // EN: Following lines are essentiel to not clear the flag!
     // FR: Les ligne suivantes sont essentielle pour ne pas effacer le flag!
