@@ -44,7 +44,7 @@ void executionGPRS ()
     gestionCommunicationGPRS();
   }
   else if (SerialInByte != 10) {  // On ignore le caractère interligne (line feed)
-  msg += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
+    msg += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
   }
 }
 
