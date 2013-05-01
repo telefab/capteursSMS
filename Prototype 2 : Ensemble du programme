@@ -194,7 +194,7 @@ void envoyerUnMessage(float temp, boolean messageAutomatique)
 
   Serial.println("*** ENVOI D'UN SMS ***");
   Serial.println("*** Destinataire ***");
-  GPRS.println(phone_number);
+  Serial.println(phone_number);
   Serial.println("*** Corps du SMS ***");
 
   GPRS.print("AT+CMGS=\""); // Parametrage du numéro
