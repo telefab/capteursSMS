@@ -192,7 +192,7 @@ void envoyerUnMessage(float temp, boolean messageAutomatique)
   GPRS.print("AT+CMGF=1\r\n"); // Préconfiguration du mode texte
   delay(500);
 
-  Serial.println("*** ENVOI D'UN SMS ***");
+  Serial.println("\n*** ENVOI D'UN SMS ***");
   Serial.println("*** Destinataire ***");
   Serial.println(phone_number);
   Serial.println("*** Corps du SMS ***");
