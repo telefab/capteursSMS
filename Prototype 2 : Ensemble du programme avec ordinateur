@@ -75,6 +75,7 @@ void mesureCapteur1 ()
             Serial.println("*** La temperature sort de l'intervalle. ***");
             intervalleCapteur1=false;
             envoyerUnMessage (temperatureCapteur1, true);
+            Serial.println("*** Message envoye avec succes. ***");
         }
     }
     else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT)) // On rentre à nouveau dans cet intervalle
@@ -89,6 +90,7 @@ void mesureCapteur1 ()
             Serial.println("*** La temperature rentre a nouveau dans l'intervalle. ***");
             intervalleCapteur1=true;
             envoyerUnMessage (temperatureCapteur1, true);
+            Serial.println("*** Message envoye avec succes. ***");
         }
     }
 }
