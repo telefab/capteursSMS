@@ -66,12 +66,13 @@ void mesureCapteur1 ()
     if (intervalleCapteur1 & ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))) // On sort de l'intervalle acceptable
     {
         delay (TEMPS_ATTENTE_SECURITE*1000); // Attente
+        tempsPrecedentCapteur1 = now();
         getTemperature (&temperatureCapteur1, adresseCapteur1);
         Serial.println("*** Verification temperature capteur 1 : ***");
         Serial.println(temperatureCapteur1);
         if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT)) // Seconde vérification
         {
-            Serial.println("*** La temperature sort de l'intervalle. Envoi d'un message. ***");
+            Serial.println("*** La temperature sort de l'intervalle. ***");
             intervalleCapteur1=false;
             envoyerUnMessage (temperatureCapteur1, true);
         }
@@ -79,12 +80,13 @@ void mesureCapteur1 ()
     else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT)) // On rentre à nouveau dans cet intervalle
     {
         delay (TEMPS_ATTENTE_SECURITE*1000); // Attente
+        tempsPrecedentCapteur1 = now();
         getTemperature (&temperatureCapteur1, adresseCapteur1);
         Serial.println("*** Verification temperature capteur 1 : ***");
         Serial.println(temperatureCapteur1);
         if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT)) // Seconde vérification
         {
-            Serial.println("*** La temperature rentre a nouveau dans l'intervalle. Envoi d'un message. ***");
+            Serial.println("*** La temperature rentre a nouveau dans l'intervalle. ***");
             intervalleCapteur1=true;
             envoyerUnMessage (temperatureCapteur1, true);
         }
@@ -189,6 +191,11 @@ void envoyerUnMessage(float temp, boolean messageAutomatique)
   delay(500);
   GPRS.print("AT+CMGF=1\r\n"); // Préconfiguration du mode texte
   delay(500);
+
+  Serial.println("*** ENVOI D'UN SMS ***");
+  Serial.println("*** Destinataire ***");
+  GPRS.println(phone_number);
+  Serial.println("*** Corps du SMS ***");
 
   GPRS.print("AT+CMGS=\""); // Parametrage du numéro
   GPRS.print(phone_number);
