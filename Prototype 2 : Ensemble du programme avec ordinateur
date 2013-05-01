@@ -137,7 +137,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   }
 
   if (msg.indexOf("Call Ready")>=0) { // Le réseau mobile est disponible
-     Serial.println("*** Le module GPRS est maintenant enregistre sur le reseau. ***\n");
+     Serial.println("*** Le module GPRS est maintenant enregistre sur le reseau. ***");
      GPRS.println("AT+CMGF=1"); // Utilisation du mode texte pour la gestion des messages SMS
   }
   
@@ -178,10 +178,10 @@ void traiterSMS(String smsText)
     if (smsText.indexOf("Temp 1")>=0) { // Demande d'envoi de la température du capteur 1
        Serial.println("*** Une demande de la temperature du capteur 1 a ete faite. ***");
        envoyerUnMessage (temperatureCapteur1, false);
-       Serial.println("*** Message envoye avec succes. ***\n");
+       Serial.println("*** Message envoye avec succes. ***");
     }
     else {
-       Serial.println("*** Le message ne peut pas etre decode. ***\n");
+       Serial.println("*** Le message ne peut pas etre decode. ***");
     }
 }
 
