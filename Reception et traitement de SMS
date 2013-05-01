@@ -1,129 +1,155 @@
+// Le code permettant la réception des SMS et reprend, en partie, le code fait par mchobby disponible à cette adresse : http://mchobby.be/wiki/index.php?title=GeekOnFire_GSM/GPRS_Shield
+
 #include <SoftwareSerial.h>
-#include <GoGprs.h> // Librairie à télécharger et installer : https://github.com/mchobby/GoGprs
 
-#define TEMPS_ATTENTE 30 // En secondes
+SoftwareSerial mySerial(7, 8);  // mySerial : relatif au shield GPRS ; Serial : relatif à l'ordinateur
 
-// Serial connection to GPRS shield
-SoftwareSerial GSM(7,8); // GSM : relatif au shield GPRS ; Serial : relatif à l'ordinateur
-GoGprs gsm = GoGprs(&GSM);
+String phone_number="+33647877083";    // +336******** est le numéro par défaut
+String SIM_PIN_CODE = String( "0000" );    // Code Pin de la carte SIM
+String msg = String("");          // Mémoire tampon de la communication avec le module GPRS
+int CorpsSMS = false;        // Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
 
-int ledGSM = 13;
-int onModulePin = 9; // the pin to switch on the module (without press on button)
-String phone_number="+33647877083"; // ********* is the number to call
 float temperatureCapteur1 = 20.0;
 
 
-void switchGSMModule()
+
+void envoyerUnMessage(float temp)
 {
-  digitalWrite(onModulePin,HIGH);
-  delay(2100);
-  digitalWrite(onModulePin,LOW);
+  delay(500);
+  mySerial.print("AT+CMGF=1\r\n"); // Préconfiguration du mode texte
+  delay(1600);
+
+  mySerial.print("AT+CMGS=\""); // Paramtrage du numéro
+  mySerial.print(phone_number);
+  mySerial.print("\"\r\n");
+  while(mySerial.read()!='>');
+
+  mySerial.print("La temperature est de ");  // Corps du SMS
+  mySerial.print(temp, 2);
+  mySerial.print(" degres celsius.");
+  
+  Serial.print("La temperature est de ");  // Corps du SMS
+  Serial.print(temp, 2);
+  Serial.println(" degres celsius.");
+
+  delay(500);
+  mySerial.write(0x1A); // Finalisation du SMS et envoi
+  mySerial.write(0x0D);
+  mySerial.write(0x0A);
+  
+  delay(20000);
 }
 
 
+void traiterSMS(String smsText)
+{
+    if( smsText.indexOf( "temp 1" )>=0 ) // Demande d'envoi de la température du capteur 1
+    {
+       Serial.println("*** Une demande de la temperature du capteur 1 a ete faite. ***");
+       envoyerUnMessage (temperatureCapteur1);
+       Serial.println("*** Message envoye avec succes. ***\n");
+    }
+    else {
+      Serial.println("*** Le message ne peut pas etre decode. ***\n");
+    }
+}
+
+ 
 void setup()
 {
-  Serial.begin(19200); // UART baud rate
-  GSM.begin(19200);
-  delay(100);
-  pinMode(ledGSM, OUTPUT);
-  pinMode(onModulePin, OUTPUT);
-  
-    switchGSMModule(); // switches the GSM module ON
-  delay(500);
-  GSM.print("AT+CPIN=\"0000\"\r\n"); // Entrer le code PIN
-  Serial.print("AT+CPIN=\"0000\"\r\n"); // Affichage réponse sur ordinateur
-  while (!GSM.available());
-  while (GSM.available())
-  {
-    Serial.write(GSM.read());
-  }
-  delay(20000); // Attente de l'établissement du réseau
-  while (!GSM.available());
-  while (GSM.available())
-  {
-    Serial.write(GSM.read());
-  }
+  mySerial.begin(19200); // the GPRS baud rate
+  Serial.begin(19200);
+}
+
+
+void executionGPRS () 
+{
+  char SerialInByte;
+     
+    if(Serial.available())
+    {
+       mySerial.print((unsigned char)Serial.read());
+     }
+    else if(mySerial.available())
+    {
+        char SerialInByte;
+        SerialInByte = (unsigned char)mySerial.read();
+        
+        // EN: Relay to Arduino IDE Monitor
+        // FR: Relayer l'information vers le moniteur Serie Arduino
+        //Serial.print( SerialInByte );
+        
+        // -------------------------------------------------------------------
+        // EN: Program also listen to the GPRS shield message.
+        // FR: Le programme écoute également les messages issus du GPRS Shield.
+        // -------------------------------------------------------------------
+        
+        // EN: If the message ends with <CR> then process the message
+        // FR: Si le message se termine par un <CR> alors traiter le message
+        if( SerialInByte == 13 ){
+          // EN: Store the char into the message buffer
+          // FR: Stocké le caractère dans le buffer de message
+          gestionCommunicationGPRS();
+         }
+         if( SerialInByte == 10 ){
+            // EN: Skip Line feed
+            // FR: Ignorer les Line Feed
+         }
+         else {
+           // EN: store the current character in the message string buffer
+           // FR: stocker le caractère dans la mémoire tampon réservé au message
+           msg += String(SerialInByte);
+         }
+     }
 }
 
 
 void loop()
 {
-  receptionSMS();
-  delay(TEMPS_ATTENTE*1000);
+    executionGPRS();
 }
 
 
-void receptionSMS()
-{
-      gsm.execute();       // Initialisation du module GPRS
-  
-      if( gsm.hasSms() ){ // A-t-on recu un message ?
-        String smsText = gsm.smsText(); // Corps du SMS
-        phone_number = gsm.smsCallee(); // Le numéro de l'envoyeur est maintenant le numéro par défaut
-        Serial.println("Un SMS a ete recu !");
-        Serial.println( phone_number );        // Message renvoyé ici : AT+CMGR=30ou32
-        Serial.println(" : ");
-        Serial.println( smsText );
-        gsm.clearSms(); // Reset the reception of the last SMS
-
-        traiterSMS(smsText); // Envoi à la fonction de traitement du message recu
-     }
-    else {
-      Serial.println("Pas de message recu.\n");
-    }
-   
-  
-}
-
-
-
-void traiterSMS(String smsText)
-{
-    if( smsText.indexOf( "temp" )>=0 ) // Demande d'envoie de la température du capteur 1
-    {
-       Serial.println("Une demande de la temperature du capteur 1 a ete faite.\n");
-       envoyerUnMessageRapide (temperatureCapteur1);
-    }
-    else {
-      Serial.println("Le message ne peut pas etre decode\n");
-    }
-}
-
-
-void envoyerUnMessageRapide(float temp)
-{
-  GSM.print("AT+CMGF=1\r\n"); // sets the SMS mode to text
-  while (!GSM.available());
-  while (GSM.available())
-  {
-    Serial.write(GSM.read());
+void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit en conséquence
+{    
+  if( msg.indexOf( "+CPIN: SIM PIN" ) >= 0 ){        // Demande du code Pin de la carte SIM
+     Serial.println( "*** Envoi du code Pin... ***" );
+     mySerial.print("AT+CPIN=");    // Envoi du code Pin
+     mySerial.println( SIM_PIN_CODE );
   }
-  delay(1600);
 
-  GSM.print("AT+CMGS=\""); // send the SMS number
-  GSM.print(phone_number);
-  GSM.print("\"\r\n");
-  while(GSM.read()!='>');
-  
-  GSM.print("La temperature dans le capteur 1 est de ");
-  GSM.print(temp, 2);
-  GSM.print(" degres celsius."); // Fin SMS body
-
-  delay(500);
-  GSM.write(0x1A); // Sends ++
-  GSM.write(0x0D);
-  GSM.write(0x0A);
-  while (!GSM.available());
-  while (GSM.available())
-  {
-    Serial.write(GSM.read());
+  if( msg.indexOf( "Call Ready" ) >= 0 ){          // Le réseau mobile est disponible
+     Serial.println( "*** Le module GPRS est maintenant enregistre sur le reseau ***\n" );
+     mySerial.println( "AT+CMGF=1" ); // Utilisation du mode texte pour la gestion des messages SMS
   }
   
-  delay(20000);
-  while (!GSM.available());
-  while (GSM.available())
-  {
-    Serial.write(GSM.read());
+  
+  // Opérations relatives à la réception d'un SMS
+  
+  if( msg.indexOf( "+CMTI" ) >= 0 ){              // Phase 1  : début de réception d'un SMS
+     Serial.println( "*** UN SMS A ETE RECU ***" );
+     int iPos = msg.indexOf( "," );
+     String SmsStorePos = msg.substring( iPos+1 );
+     mySerial.print( "AT+CMGR=" ); // Demande de lecture des informations du message
+     mySerial.println( SmsStorePos );
   }
+  
+  if( msg.indexOf( "+CMGR:" ) >= 0 ){      // Phase 2 : réception du numéro de l'expéditeur
+     int iPos = msg.indexOf( "+33" );
+     phone_number = msg.substring(iPos, iPos+12);  // Mise à jour du numéro d'envoi des messages par le dernier numéro connu
+     Serial.println( "*** Numero de l'expediteur ***" );
+     Serial.println(phone_number);
+     CorpsSMS = true;
+     msg = "";
+    return;    // Le prochain message contiendra le corps du SMS
+  }
+  
+  if( CorpsSMS == 1 ){            // Phase 3 : corps du SMS
+    Serial.println( "*** Corps du SMS ***" );
+    Serial.println(msg);
+    traiterSMS(msg);                   // Traitement du corps du message
+  }
+  
+  msg = ""; // Efface le contenu de la mémoire tampon des messages du GPRS shield.
+  CorpsSMS = false;
 }
