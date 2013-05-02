@@ -25,7 +25,7 @@ String phone_number = "+33647877083"; // Numéro par défaut
 String SIM_PIN_CODE = "0000"; // Code Pin de la carte SIM
 String msg = ""; // Mémoire tampon de la communication avec le module GPRS
 int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
-
+String numeroSMS;
 
 
 void setup()
@@ -149,9 +149,9 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   if (msg.indexOf("+CMTI")>= 0) { // Phase 1 : début de réception d'un SMS
      Serial.println("\n*** UN SMS A ETE RECU ***");
      int iPos = msg.indexOf(",");
-     String SmsStorePos = msg.substring(iPos+1);
+     numeroSMS = msg.substring(iPos+1);
      GPRS.print("AT+CMGR="); // Demande de lecture des informations du message
-     GPRS.println(SmsStorePos);
+     GPRS.println(numeroSMS);
   }
   
   if (msg.indexOf("+CMGR:")>=0) { // Phase 2 : réception du numéro de l'expéditeur
@@ -168,6 +168,8 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
     Serial.println("*** Corps du SMS ***");
     Serial.println(msg);
     traiterSMS(msg); // Traitement du corps du message
+    GPRS.print("AT+CMGD="); // Suppression du SMS pour ne pas encombrer la carte SIM
+    GPRS.println(numeroSMS);
   }
   
   msg = ""; // Efface le contenu de la mémoire tampon des messages du GPRS shield.
