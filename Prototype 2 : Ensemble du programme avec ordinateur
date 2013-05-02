@@ -26,7 +26,7 @@ String SIM_PIN_CODE = "0000"; // Code Pin de la carte SIM
 String msg = ""; // Mémoire tampon de la communication avec le module GPRS
 int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
 String numeroSMS;
-
+String numeroTemp = phone_number;
 
 void setup()
 {
@@ -156,9 +156,9 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   
   if (msg.indexOf("+CMGR:")>=0) { // Phase 2 : réception du numéro de l'expéditeur
      int iPos = msg.indexOf("+33");
-     phone_number = msg.substring(iPos, iPos+12); // Mise à jour du numéro d'envoi des messages par le dernier numéro connu
+     numeroTemp = msg.substring(iPos, iPos+12); 
      Serial.println("*** Numero de l'expediteur ***");
-     Serial.println(phone_number);
+     Serial.println(numeroTemp);
      CorpsSMS = true;
      msg = "";
     return; // Le prochain message contiendra le corps du SMS
@@ -180,6 +180,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
 void traiterSMS(String smsText)
 {
     if (smsText.indexOf("Temp 1")>=0) { // Demande d'envoi de la température du capteur 1
+       phone_number = numeroTemp; // Remplacement du numéro 
        Serial.println("*** Une demande de la temperature du capteur 1 a ete faite. ***");
        envoyerUnMessage (temperatureCapteur1, false);
        Serial.println("*** Message envoye avec succes. ***");
