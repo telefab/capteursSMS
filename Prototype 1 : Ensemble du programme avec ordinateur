@@ -5,7 +5,7 @@
 #include <SoftwareSerial.h>
 
 #define DS18B20 0x28
-#define BROCHE_ONEWIRE 7
+#define BROCHE_ONEWIRE 4
 #define SEUIL_BAS 15.0
 #define SEUIL_HAUT 25.0
 #define TEMPS_ATTENTE 30                // En secondes
