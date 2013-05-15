@@ -177,7 +177,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
 }
 
 
-void traiterSMS(String smsText)
+void traiterSMS(const String smsText)
 {
     if (smsText.indexOf("Temp 1")>=0) { // Demande d'envoi de la température du capteur 1
        phone_number = numeroTemp; // Remplacement du numéro 
@@ -191,7 +191,7 @@ void traiterSMS(String smsText)
 }
 
 
-void envoyerUnMessage(float temp, boolean messageAutomatique)
+void envoyerUnMessage(const float temp, const boolean messageAutomatique)
 {
   delay(500);
   GPRS.print("AT+CMGF=1\r\n"); // Préconfiguration du mode texte
