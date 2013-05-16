@@ -1,0 +1,83 @@
+#include <OneWire.h>
+#define DS18B20 0x28
+#define BROCHE_ONEWIRE 4
+
+#define NOMBRE_CAPTEURS_MAX 10     // Nombre maximum de capteurs en série autorisé (valeur >= 1)
+#define TEMPS_ATTENTE 30          // Temps d'attente entre deux mesures du meme capteur en secondes
+
+OneWire ds(BROCHE_ONEWIRE);
+byte adresseCapteurs [NOMBRE_CAPTEURS_MAX][8]; // Adresses des capteurs
+float temperature[NOMBRE_CAPTEURS_MAX];        // Température des capteurs
+int nombre_capteurs = 0;
+
+
+
+void getTemperature (float *temp, const byte addr[])
+{
+    byte data[2];
+
+    ds.reset();
+    ds.select(addr); // Sélectionne le capteur de température
+
+    ds.write(0x44,1); // Lance la mesure de température
+    delay(800);
+    
+    ds.reset(); // Reset pour envoyer maintenant la demande de lecture
+    ds.select(addr);
+    ds.write(0xBE); // Demande de lecture du scratchpad
+
+    data[0] = ds.read(); // Lit les 2 premiers octets du scratchpad sur lesquels est scontenue la température
+    data[1] = ds.read();
+    *temp = ((data[1] << 8) | data[0]) * 0.0625; // Conversion en degrés celsius
+}
+
+
+void afficheTemperature (const float temperature, const int numeroCapteur)
+{
+    Serial.print("La temperature du capteur ");
+    Serial.print(numeroCapteur);
+    Serial.print(" est de ");
+    Serial.print(temperature);
+    Serial.write('°');
+    Serial.write('C');
+    Serial.println();
+}
+
+
+void setup()
+{
+    int i=0;
+    Serial.begin(9600); // Initialisation du port série
+
+    ds.reset();
+    ds.reset_search();
+    while ((nombre_capteurs < NOMBRE_CAPTEURS_MAX) && (ds.search(adresseCapteurs[nombre_capteurs])))    // Recherche des différents capteurs
+    {
+      nombre_capteurs++;
+      Serial.print("\nCapteur ");              // Affichage des infos du capteur à l'ordinateur
+      Serial.println(nombre_capteurs);
+      Serial.print(" : ");
+      for( i = 0; i < 8; i++) 
+      {
+        Serial.print(adresseCapteurs[nombre_capteurs-1][i], HEX);
+        Serial.print(" ");
+      }
+      Serial.println("");
+    }
+    Serial.print("Au total, ");
+    Serial.print(nombre_capteurs);
+    Serial.println(" capteurs ont ete reconnus.");
+}
+
+
+void loop ()
+{
+    for (int i=0; i<nombre_capteurs; i++)      // Demande et affichage des températures des capteurs
+    {
+      getTemperature (temperature+ i*sizeof(int), adresseCapteurs[i]);
+      afficheTemperature(temperature[i], i+1);
+      delay (1000);
+    }
+    
+    delay ((TEMPS_ATTENTE-nombre_capteurs)*1000);
+}
