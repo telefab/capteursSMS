@@ -57,7 +57,7 @@ void setup()
       Serial.print("\nCapteur ");              // Affichage des infos du capteur à l'ordinateur
       Serial.println(nombre_capteurs);
       Serial.print(" : ");
-      for( i = 0; i < 8; i++) 
+      for(i=0; i < 8; i++) 
       {
         Serial.print(adresseCapteurs[nombre_capteurs-1][i], HEX);
         Serial.print(" ");
