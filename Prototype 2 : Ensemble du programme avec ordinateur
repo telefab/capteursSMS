@@ -1,7 +1,7 @@
 // Modifier Buffer Arduino : dans un terminal entrer la commande : sudo gedit /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
 // Modifier la valeur de MAX_RX_BUFF à 256
 
-// Commande pour vérifier le réseau : write command : AT+CGREG=[<stat>] ; réponse 1 si le réseau est opérationnel, autre chose sinon. Doc p.163
+// Commande pour vérifier le réseau : write command : AT+CREG=[<stat>] ; réponse 1 si le réseau est opérationnel, autre chose sinon. Doc p.163
 
 
 #include <SoftwareSerial.h>
