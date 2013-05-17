@@ -1,8 +1,10 @@
 #include <SoftwareSerial.h>
+#include <Time.h>
 
-SoftwareSerial GPRS (7, 8); // mySerial : relatif au shield GPRS ; Serial : relatif à l'ordinateur
+#define TEMPS_ATTENTE 20      // Temps d'attente en secondes entre vérifications du réseau
 
 // Variables relatives au module GPRS
+SoftwareSerial GPRS (7, 8); // mySerial : relatif au shield GPRS ; Serial : relatif à l'ordinateur
 String phone_number = "+33647877083"; // Numéro par défaut
 String SIM_PIN_CODE = "0000"; // Code Pin de la carte SIM
 String msg = ""; // Mémoire tampon de la communication avec le module GPRS
@@ -10,12 +12,17 @@ int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS c
 
 float temperatureCapteur1 = 20.0;
 
+boolean veille=false;
+time_t tempsPrecedent;
+
 
 
 void setup()
 {
   GPRS.begin(19200); // Fréquence du module
   Serial.begin(19200);
+  
+  tempsPrecedent = now();
 }
 
 
@@ -23,6 +30,23 @@ void loop()
 {
   if (GPRS.available()) {
     executionGPRS();
+  }
+  else {
+    time_t time = now();
+    if ((time-tempsPrecedent) >= TEMPS_ATTENTE)
+    {
+      Serial.println("*** Affichage de la qualite du reseau ***");    // Vérification du réseau
+      veille = reseauIndisponible();
+      Serial.print("veille : ");
+      Serial.println(veille);
+      Serial.println("");
+      tempsPrecedent = time;
+    }
+    /* else if (!veille && ((time-tempsPrecedentCapteur1) >= TEMPS_ATTENTE2))
+    {
+      mesureCapteur1();
+      tempsPrecedentCapteur1 = time;
+    }*/
   }
 }
 
