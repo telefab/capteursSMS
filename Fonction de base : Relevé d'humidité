@@ -1,15 +1,15 @@
-
 #include <FreqCounter.h> // 
 #include <Wire.h>
 
 http://tushev.org
 
 int freq, offset, sens;
+
 void setup(){
  Wire.begin();
  Serial.begin(9600);
- sens   =  i2cRead2bytes(81, 10); //Lit la sensibilité de l'EEPROM (mémoire qui contient les facteurs d'étalonnage) via I2C
- offset =  i2cRead2bytes(81, 12); //Lit l'offset de l'EEPROM
+ sens   =  i2cRead2bytes(81, 10); // Lit la sensibilité de l'EEPROM (mémoire qui contient les facteurs d'étalonnage) via I2C
+ offset =  i2cRead2bytes(81, 12); // Lit l'offset de l'EEPROM
 }
 
 void loop(){
@@ -22,11 +22,11 @@ void loop(){
  float HR =  (offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
  Serial.println(HR);
 }
-int i2cRead2bytes(int deviceaddress, byte address)  
-{
+
+int i2cRead2bytes(int deviceaddress, byte address) {
  // SET ADDRESS
  Wire.beginTransmission(deviceaddress);
- Wire.send(address); // address for sensitivity
+ Wire.send(address); 
  Wire.endTransmission();
  // REQUEST RETURN VALUE
  Wire.requestFrom(deviceaddress, 2);
