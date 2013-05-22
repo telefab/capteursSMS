@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 #include <Time.h>
 
-#define TEMPS_ATTENTE 20      // Temps d'attente en secondes entre vérifications du réseau
+#define TEMPS_ATTENTE 20 // Temps d'attente en secondes entre vérifications du réseau
 
 // Variables relatives au module GPRS
 SoftwareSerial GPRS (7, 8); // mySerial : relatif au shield GPRS ; Serial : relatif à l'ordinateur
@@ -12,7 +12,7 @@ int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS c
 
 float temperatureCapteur1 = 20.0;
 
-boolean veille=false;
+boolean veille = true;
 time_t tempsPrecedent;
 
 
@@ -35,11 +35,7 @@ void loop()
     time_t time = now();
     if ((time-tempsPrecedent) >= TEMPS_ATTENTE)
     {
-      Serial.println("*** Affichage de la qualite du reseau ***");    // Vérification du réseau
-      veille = reseauIndisponible();
-      Serial.print("veille : ");
-      Serial.println(veille);
-      Serial.println("");
+      reseauIndisponible();  // Vérification du réseau
       tempsPrecedent = time;
     }
     /* else if (!veille && ((time-tempsPrecedentCapteur1) >= TEMPS_ATTENTE2))
@@ -152,11 +148,11 @@ void envoyerUnMessage(float temp)
 }
 
 
-boolean reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon
+void reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon
 {
   /*
-    Commande pour vérifier l'enregistrement sur le réseau : AT+CREG    : datasheet p.77
-    Commande pour la qualité du signal réseau : AT+CSQ    : datasheet p.81
+    Commande pour vérifier l'enregistrement sur le réseau : AT+CREG : datasheet p.77
+    Commande pour la qualité du signal réseau : AT+CSQ : datasheet p.81
     Pour plus d'infos : http://m2m.com/thread/1020
                         http://telefab.fr/lab/media/datasheet/SIM900_ATC_V1_00.pdf
   */
@@ -164,35 +160,23 @@ boolean reseauIndisponible() // Renvoi true si le réseau est indisponible, fals
   char SerialInByte;
   String message="";
   
-  GPRS.print("AT+CSQ\r\n");    // Demande de la qualité du signal réseau
-  Serial.println("Qualite du signal reseau (AT+CSQ) :");
+  GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
   
   while (!GPRS.available());
   while (GPRS.available())
   {
     SerialInByte = (unsigned char)GPRS.read(); // Réception du caractère envoyé par le module GPRS
-    if (SerialInByte != 10)   // On ignore le caractère interligne (line feed)
+    if (SerialInByte != 10) // On ignore le caractère interligne (line feed)
     {
-      message += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
+        message += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
     }
   }
-  Serial.println(message);
-  message="";
+  veille = (message[19] != '1'); // Analyse du résultat
   
-  
-  GPRS.print("AT+CREG?\r\n");    // Demande de l'enregistrement sur le réseau
-  Serial.println("Enregistrement sur le reseau (AT+CREG) :");
-  
-  while (!GPRS.available());
-  while (GPRS.available())
-  {
-    SerialInByte = (unsigned char)GPRS.read(); // Réception du caractère envoyé par le module GPRS
-    if (SerialInByte != 10)   // On ignore le caractère interligne (line feed)
-    {
-      message += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
-    }
+  if (veille == true) {
+    Serial.println("Veille : true");
   }
-  Serial.println(message);
-  
-  message.indexOf("0,1")<0;    // Analyse du résultat // Mettre le bon message ici !
+   else {
+    Serial.println("Veille = false");
+  }
 }
