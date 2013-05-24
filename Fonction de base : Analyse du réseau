@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 #include <Time.h>
 
-#define TEMPS_ATTENTE 20 // Temps d'attente en secondes entre vérifications du réseau
+#define TEMPS_ATTENTE_VEILLE 20 // Temps d'attente en secondes entre vérifications du réseau
 
 // Variables relatives au module GPRS
 SoftwareSerial GPRS (7, 8); // mySerial : relatif au shield GPRS ; Serial : relatif à l'ordinateur
@@ -13,7 +13,7 @@ int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS c
 float temperatureCapteur1 = 20.0;
 
 boolean veille = true;
-time_t tempsPrecedent;
+time_t tempsPrecedentVeille;
 
 
 
@@ -22,7 +22,7 @@ void setup()
   GPRS.begin(19200); // Fréquence du module
   Serial.begin(19200);
   
-  tempsPrecedent = now();
+  tempsPrecedentVeille = now();
 }
 
 
@@ -33,10 +33,10 @@ void loop()
   }
   else {
     time_t time = now();
-    if ((time-tempsPrecedent) >= TEMPS_ATTENTE)
+    if ((time-tempsPrecedentVeille) >= TEMPS_ATTENTE_VEILLE)
     {
       reseauIndisponible();  // Vérification du réseau
-      tempsPrecedent = time;
+      tempsPrecedentVeille = time;
     }
     /* else if (!veille && ((time-tempsPrecedentCapteur1) >= TEMPS_ATTENTE2))
     {
@@ -150,18 +150,12 @@ void envoyerUnMessage(float temp)
 
 void reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon
 {
-  /*
-    Commande pour vérifier l'enregistrement sur le réseau : AT+CREG : datasheet p.77
-    Commande pour la qualité du signal réseau : AT+CSQ : datasheet p.81
-    Pour plus d'infos : http://m2m.com/thread/1020
-                        http://telefab.fr/lab/media/datasheet/SIM900_ATC_V1_00.pdf
-  */
+  /* Commande pour vérifier l'enregistrement sur le réseau : AT+CREG? : datasheet p.77 */
   
   char SerialInByte;
   String message="";
   
-  GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
-  
+  GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau 
   while (!GPRS.available());
   while (GPRS.available())
   {
@@ -174,9 +168,9 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
   veille = (message[19] != '1'); // Analyse du résultat
   
   if (veille == true) {
-    Serial.println("Veille : true");
+    Serial.println("*** Reseau indisponible, en veille ***");
   }
    else {
-    Serial.println("Veille = false");
+    Serial.println("*** Reseau fonctionnel, en fonctionnement normal ***");
   }
 }
