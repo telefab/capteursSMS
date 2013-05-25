@@ -83,7 +83,7 @@ void loop()
     if (!veille) {
        if ((time-tempsPrecedentCapteurs[capteurMesure]) >= TEMPS_ATTENTE)
       {
-        mesureCapteur(capteurMesure);
+        mesureCapteur(capteurMesure);  // Mesure du capteur
         tempsPrecedentCapteurs[capteurMesure] = time;
       }
       capteurMesure++;
@@ -316,6 +316,6 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
     Serial.println("*** Reseau mobile indisponible, veille. ***");
   }
    else {
-    Serial.println("*** Reseau mobile disponible, fonctionnement normal. ***");
+    Serial.println("* Reseau mobile disponible, fonctionnement normal. ***");
   }
 }
