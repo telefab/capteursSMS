@@ -11,6 +11,7 @@
 #define SEUIL_HAUT 25.0
 #define TEMPS_ATTENTE 30 // Temps d'attente en secondes entre deux mesures de la température
 #define TEMPS_ATTENTE_SECURITE 6 // Temps d'attente en secondes pour la mesure de vérification
+#define TEMPS_ATTENTE_VEILLE 20 // Temps d'attente en secondes entre deux vérifications du réseau
 #define NOMBRE_CAPTEURS_MAX 10 // Nombre maximum de capteurs en série autorisé (valeur >= 1)
 
 // Variables relatives aux capteurs
@@ -30,11 +31,14 @@ String msg = ""; // Mémoire tampon de la communication avec le module GPRS
 int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
 String numeroSMS;
 String numeroTemp = phone_number;
+boolean veille = true;
+time_t tempsPrecedentVeille;
 
 void setup()
 {
   delay (5000);
   GPRS.begin(19200); // Fréquence du module
+  tempsPrecedentVeille = now();
     
   // Setup Capteurs
   int i=0;
@@ -71,14 +75,21 @@ void loop()
   }
   else {
     time_t time = now();
-    if ((time-tempsPrecedentCapteurs[capteurMesure]) >= TEMPS_ATTENTE)
+    if ((time-tempsPrecedentVeille) >= TEMPS_ATTENTE_VEILLE)
     {
-      mesureCapteur(capteurMesure);
-      tempsPrecedentCapteurs[capteurMesure] = time;
+      reseauIndisponible(); // Vérification du réseau
+      tempsPrecedentVeille = time;
     }
-    capteurMesure++;
-    if (capteurMesure == nombre_capteurs) {
-      capteurMesure = 0;
+    if (!veille) {
+       if ((time-tempsPrecedentCapteurs[capteurMesure]) >= TEMPS_ATTENTE)
+      {
+        mesureCapteur(capteurMesure);
+        tempsPrecedentCapteurs[capteurMesure] = time;
+      }
+      capteurMesure++;
+      if (capteurMesure == nombre_capteurs) {
+        capteurMesure = 0;
+      }
     }
   }
 }
@@ -280,4 +291,31 @@ void envoyerUnMessage(const float temp, const boolean messageAutomatique, const 
   GPRS.write(0x0A);
   
   delay(20000);
+}
+
+void reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon
+{
+  /* Commande pour vérifier l'enregistrement sur le réseau : AT+CREG? : datasheet p.77 */
+  
+  char SerialInByte;
+  String message="";
+  
+  GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
+  while (!GPRS.available());
+  while (GPRS.available())
+  {
+    SerialInByte = (unsigned char)GPRS.read(); // Réception du caractère envoyé par le module GPRS
+    if (SerialInByte != 10) // On ignore le caractère interligne (line feed)
+    {
+        message += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
+    }
+  }
+  veille = (message[19] != '1'); // Analyse du résultat
+  
+  if (veille == true) {
+    Serial.println("*** Reseau mobilindisponible, veille. ***");
+  }
+   else {
+    Serial.println("*** Reseau disponible, fonctionnement normal. ***");
+  }
 }
