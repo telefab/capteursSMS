@@ -313,9 +313,9 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
   veille = (message[19] != '1'); // Analyse du résultat
   
   if (veille == true) {
-    Serial.println("*** Reseau mobilindisponible, veille. ***");
+    Serial.println("*** Reseau mobile indisponible, veille. ***");
   }
    else {
-    Serial.println("*** Reseau disponible, fonctionnement normal. ***");
+    Serial.println("*** Reseau mobile disponible, fonctionnement normal. ***");
   }
 }
