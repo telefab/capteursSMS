@@ -9,10 +9,10 @@
 #define BROCHE_ONEWIRE 4
 #define SEUIL_BAS 15.0
 #define SEUIL_HAUT 25.0
-#define TEMPS_ATTENTE 30 // Temps d'attente en secondes entre deux mesures de la température
-#define TEMPS_ATTENTE_SECURITE 6 // Temps d'attente en secondes pour la mesure de vérification
-#define TEMPS_ATTENTE_VEILLE 20 // Temps d'attente en secondes entre deux vérifications du réseau
-#define NOMBRE_CAPTEURS_MAX 10 // Nombre maximum de capteurs en série autorisé (valeur >= 1)
+#define TEMPS_ATTENTE 30 // Temps d'attente en secondes entre deux mesures de la température (en sec)
+#define TEMPS_ATTENTE_SECURITE 6 // Temps d'attente en secondes pour la mesure de vérification (en sec)
+#define TEMPS_ATTENTE_VEILLE 20 // Temps d'attente en secondes entre deux vérifications du réseau (en sec)
+#define NOMBRE_CAPTEURS_MAX 5 // Nombre maximum de capteurs en série autorisé (valeur >= 1)
 
 // Variables relatives aux capteurs
 OneWire ds(BROCHE_ONEWIRE);
