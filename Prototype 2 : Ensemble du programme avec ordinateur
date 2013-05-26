@@ -62,9 +62,7 @@ void setup()
       Serial.print(" ");
     }
   }
-  Serial.print("\nAu total, ");
-  Serial.print(nombre_capteurs);
-  Serial.println(" capteurs ont ete reconnus.\n");
+
 }
 
 
@@ -83,7 +81,7 @@ void loop()
     if (!veille) {
        if ((time-tempsPrecedentCapteurs[capteurMesure]) >= TEMPS_ATTENTE)
       {
-        mesureCapteur(capteurMesure);  // Mesure du capteur
+        mesureCapteur(capteurMesure); // Mesure sur le capteur
         tempsPrecedentCapteurs[capteurMesure] = time;
       }
       capteurMesure++;
@@ -95,13 +93,12 @@ void loop()
 }
 
 
-
 void mesureCapteur (const int i)
 {
     getTemperature (&temperatureCapteurs[i], adresseCapteurs[i]); // Demande la température du capteur 1
-    Serial.print("*** Temperature capteur ");
+    Serial.print("Temperature capteur ");
     Serial.print(i+1);
-    Serial.println(" : ***");
+    Serial.print(" : ");
     Serial.println(temperatureCapteurs[i]);
 
     if (intervalleCapteurs[i] & ((temperatureCapteurs[i] < SEUIL_BAS) | (temperatureCapteurs[i] > SEUIL_HAUT))) // On sort de l'intervalle acceptable
@@ -109,14 +106,21 @@ void mesureCapteur (const int i)
         delay (TEMPS_ATTENTE_SECURITE*1000); // Attente
         tempsPrecedentCapteurs[i] = now();
         getTemperature (&temperatureCapteurs[i], adresseCapteurs[i]);
-        Serial.println("*** Verification temperature : ***");
+        Serial.print("Verification : ");
         Serial.println(temperatureCapteurs[i]);
         if ((temperatureCapteurs[i] < SEUIL_BAS) | (temperatureCapteurs[i] > SEUIL_HAUT)) // Seconde vérification
         {
-            Serial.println("*** La temperature sort de l'intervalle. ***");
-            intervalleCapteurs[i]=false;
-            envoyerUnMessage (temperatureCapteurs[i], true, i+1);
-            Serial.println("*** Message envoye avec succes. ***\n");
+            Serial.println("* La temperature sort de l'intervalle");
+            reseauIndisponible(); // Vérification du réseau
+            tempsPrecedentVeille = now();
+            if (!veille) {
+              intervalleCapteurs[i]=false;
+              envoyerUnMessage (temperatureCapteurs[i], true, i+1);
+              Serial.println("* Message envoye avec succes\n");
+            }
+            else {
+              Serial.println("* Message non envoye\n");
+            }
         }
     }
     else if (!intervalleCapteurs[i] & (temperatureCapteurs[i] > SEUIL_BAS) & (temperatureCapteurs[i] < SEUIL_HAUT)) // On rentre à nouveau dans cet intervalle
@@ -124,14 +128,21 @@ void mesureCapteur (const int i)
         delay (TEMPS_ATTENTE_SECURITE*1000); // Attente
         tempsPrecedentCapteurs[i] = now();
         getTemperature (&temperatureCapteurs[i], adresseCapteurs[i]);
-        Serial.println("*** Verification temperature : ***");
+        Serial.print("Verification temperature : ");
         Serial.println(temperatureCapteurs[i]);
         if ((temperatureCapteurs[i] > SEUIL_BAS) & (temperatureCapteurs[i] < SEUIL_HAUT)) // Seconde vérification
         {
-            Serial.println("*** La temperature rentre a nouveau dans l'intervalle. ***");
-            intervalleCapteurs[i]=true;
-            envoyerUnMessage (temperatureCapteurs[i], true, i+1);
-            Serial.println("*** Message envoye avec succes. ***\n");
+            Serial.println("*La temperature rentre dans l'intervalle");
+            reseauIndisponible(); // Vérification du réseau
+            tempsPrecedentVeille = now();
+            if (!veille) {
+              intervalleCapteurs[i]=true;
+              envoyerUnMessage (temperatureCapteurs[i], true, i+1);
+              Serial.println("* Message envoye avec succes\n");
+            }
+            else {
+              Serial.println("* Message non envoye\n");
+            }
         }
     }
 
@@ -173,13 +184,13 @@ void executionGPRS ()
 void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit en conséquence
 {
   if (msg.indexOf("+CPIN: SIM PIN") >= 0) { // Demande du code Pin de la carte SIM
-     Serial.println("*** Envoi du code Pin... ***");
+     Serial.println("\n\n* Envoi du code Pin");
      GPRS.print("AT+CPIN="); // Envoi du code Pin
      GPRS.println( SIM_PIN_CODE );
   }
 
   if (msg.indexOf("Call Ready") >= 0) { // Le réseau mobile est disponible
-     Serial.println("*** Le module GPRS est maintenant enregistre sur le reseau. ***\n");
+     Serial.println("* Recherche du reseau");
      GPRS.println("AT+CMGF=1"); // Utilisation du mode texte pour la gestion des messages SMS
   }
   
@@ -187,7 +198,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   // Opérations relatives à la réception d'un SMS
   
   if (msg.indexOf("+CMTI") >= 0) { // Phase 1 : début de réception d'un SMS
-     Serial.println("\n*** UN SMS A ETE RECU ***");
+     Serial.println("\n* UN SMS A ETE RECU");
      int iPos = msg.indexOf(",");
      numeroSMS = msg.substring(iPos+1);
      GPRS.print("AT+CMGR="); // Demande de lecture des informations du message
@@ -197,7 +208,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   if (msg.indexOf("+CMGR:") >= 0) { // Phase 2 : réception du numéro de l'expéditeur
      int iPos = msg.indexOf("+33");
      numeroTemp = msg.substring(iPos, iPos+12);
-     Serial.println("*** Numero de l'expediteur ***");
+     Serial.print("Expediteur : ");
      Serial.println(numeroTemp);
      CorpsSMS = true;
      msg = "";
@@ -205,7 +216,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   }
   
   if (CorpsSMS == 1) { // Phase 3 : corps du SMS
-    Serial.println("*** Corps du SMS ***");
+    Serial.print("Corps du SMS : ");
     Serial.println(msg);
     traiterSMS(msg); // Traitement du corps du message
     GPRS.print("AT+CMGD="); // Suppression du SMS pour ne pas encombrer la carte SIM
@@ -223,16 +234,15 @@ void traiterSMS(const String smsText)
     for(i=0; i < nombre_capteurs; i++) {
       if (smsText.indexOf("Temp "+String(i+1)) >= 0) { // Demande d'envoi de la température du capteur i
          phone_number = numeroTemp; // Remplacement du numéro
-         Serial.print("*** Une demande de la temperature du capteur ");
+         Serial.print("* Demande de la temperature du capteur ");
          Serial.print(i+1);
-         Serial.println(" a ete faite. ***");
          envoyerUnMessage (temperatureCapteurs[i], false, i+1);
-         Serial.println("*** Message envoye avec succes. ***\n");
+         Serial.println("* Message envoye avec succes\n");
          decode = true;
       }
     }
     if (!decode) {
-       Serial.println("*** Le message ne peut pas etre decode. ***\n");
+       Serial.println("* Message non decode\n");
     }
 }
 
@@ -242,10 +252,7 @@ void envoyerUnMessage(const float temp, const boolean messageAutomatique, const 
   GPRS.print("AT+CMGF=1\r\n"); // Préconfiguration du mode texte
   delay(500);
 
-  Serial.println("\n*** ENVOI D'UN SMS ***");
-  Serial.println("*** Destinataire ***");
-  Serial.println(phone_number);
-  Serial.println("*** Corps du SMS ***");
+  Serial.println("\n* ENVOI D'UN SMS");
 
   GPRS.print("AT+CMGS=\""); // Parametrage du numéro
   GPRS.print(phone_number);
@@ -258,39 +265,28 @@ void envoyerUnMessage(const float temp, const boolean messageAutomatique, const 
       GPRS.print("Attention, le seuil critique de temperature dans le capteur ");
       GPRS.print(numeroCapteur);
       GPRS.print(" a ete atteint. La temperature est de ");
-      Serial.print("Attention, le seuil critique de temperature dans le capteur ");
-      Serial.print(numeroCapteur);
-      Serial.print(" a ete atteint. La temperature est de ");
     }
     else
     {
       GPRS.print("La temperature dans le capteur ");
       GPRS.print(numeroCapteur);
       GPRS.print(" est de nouveau acceptable. Elle est de ");
-      Serial.print("La temperature dans le capteur ");
-      Serial.print(numeroCapteur);
-      Serial.print(" est de nouveau acceptable. Elle est de ");
     }
   }
   else {
     GPRS.print("La temperature dans le capteur ");
     GPRS.print(numeroCapteur);
     GPRS.print(" est de ");
-    Serial.print("La temperature dans le capteur ");
-    Serial.print(numeroCapteur);
-    Serial.print(" est de ");
   }
   GPRS.print(temp, 2);
   GPRS.print(" degres celsius.");
-  Serial.print(temp, 2);
-  Serial.println(" degres celsius.");
 
   delay(500);
   GPRS.write(0x1A); // Finalisation du SMS et envoi
   GPRS.write(0x0D);
   GPRS.write(0x0A);
   
-  delay(20000);
+  delay(25000);
 }
 
 void reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon
@@ -313,9 +309,9 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
   veille = (message[19] != '1'); // Analyse du résultat
   
   if (veille == true) {
-    Serial.println("*** Reseau mobile indisponible, veille. ***");
+    Serial.println("* Reseau mobile indisponible");
   }
    else {
-    Serial.println("* Reseau mobile disponible, fonctionnement normal. ***");
+    Serial.println("* Reseau mobile disponible");
   }
 }
