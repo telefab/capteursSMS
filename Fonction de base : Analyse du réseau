@@ -160,7 +160,7 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
   
   veille = (GPRS.read() != 49); // Analyse du résultat
   
-  if (veille == true) {
+  if (veille) {
     Serial.println("*** Reseau indisponible, en veille ***");
   }
    else {
