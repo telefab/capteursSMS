@@ -3,7 +3,6 @@
 
 // Passage de 14 500 bytes à 13 682 bytes sur le sketch. Gain additionnel d'environ 10% en RAM
 
-
 #include <SoftwareSerial.h>
 #include <OneWire.h>
 #include <Time.h>
@@ -211,7 +210,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   if (msg.indexOf("+CMGR:") >= 0) { // Phase 2 : réception du numéro de l'expéditeur
      int iPos = msg.indexOf("+33");
      numeroTemp = msg.substring(iPos, iPos+12);
-     Serial.print("Expediteur : ");
+     Serial.print("Exp : ");
      Serial.println(numeroTemp);
      CorpsSMS = true;
      msg = "";
@@ -305,9 +304,9 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
   veille = (GPRS.read() != 49); // Analyse du résultat
   
   if (veille) {
-    Serial.println("* Reseau ok");
+    Serial.println("* Reseau perdu");
   }
    else {
-    Serial.println("* Reseau perdu");
+    Serial.println("* Reseau ok");
   }
 }
