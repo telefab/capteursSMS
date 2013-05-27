@@ -11,7 +11,7 @@
 #define SEUIL_HAUT 25.0
 #define TEMPS_ATTENTE 30 // Temps d'attente en secondes entre deux mesures de la température (en sec)
 #define TEMPS_ATTENTE_SECURITE 6 // Temps d'attente en secondes pour la mesure de vérification (en sec)
-#define TEMPS_ATTENTE_VEILLE 25 // Temps d'attente en secondes entre deux vérifications du réseau (en sec)
+#define TEMPS_ATTENTE_VEILLE 20 // Temps d'attente en secondes entre deux vérifications du réseau (en sec)
 #define NOMBRE_CAPTEURS_MAX 5 // Nombre maximum de capteurs en série autorisé (valeur >= 1)
 #define SIM_PIN_CODE "0000" // Code Pin de la carte SIM
 
@@ -93,7 +93,7 @@ void loop()
 }
 
 
-void mesureCapteur (const int i)  // Demande de la température du capteur i
+void mesureCapteur (const int i) // Demande de la température du capteur i
 {
     getTemperature (&temperatureCapteurs[i], adresseCapteurs[i]);
     Serial.print("T. capteur ");
@@ -230,7 +230,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
 void traiterSMS(const String smsText)
 {
     boolean decode = false;
-    for(int i=0; i < nombre_capteurs; i++) {
+    for (int i=0; i < nombre_capteurs; i++) {
       if (smsText.indexOf("Temp "+String(i+1)) >= 0) { // Demande d'envoi de la température du capteur i
          phone_number = numeroTemp; // Remplacement du numéro
          Serial.print("* Demande de la temperature du capteur ");
@@ -289,26 +289,19 @@ void envoyerUnMessage(const float temp, const boolean messageAutomatique, const 
   delay(20000);
 }
 
-void reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon      // Fonction à refaire pour prendre moins de mémoire
+void reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon // Fonction à refaire pour prendre moins de mémoire
 {
   /* Commande pour vérifier l'enregistrement sur le réseau : AT+CREG? : datasheet p.77 */
   
-  char SerialInByte;
-  String message="";
-  
   GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
-  while (!GPRS.available());
-  while (GPRS.available())
-  {
-    SerialInByte = (unsigned char)GPRS.read(); // Réception du caractère envoyé par le module GPRS
-    if (SerialInByte != 10) // On ignore le caractère interligne (line feed)
-    {
-        message += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
-    }
-  }
-  veille = (message[19] != '1'); // Analyse du résultat
   
-  if (veille == true) {
+  while (!GPRS.available());
+  for (int i=0; i<21; i++) {
+  GPRS.read(); }
+  
+  veille = (GPRS.read() != 49); // Analyse du résultat
+  
+  if (veille) {
     Serial.println("* Reseau ok");
   }
    else {
