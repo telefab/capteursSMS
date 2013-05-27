@@ -1,6 +1,9 @@
 // Modifier Buffer Arduino : dans un terminal entrer la commande : sudo gedit /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
 // Modifier la valeur de MAX_RX_BUFF à 256
 
+// Passage de 14 500 bytes à 13 682 bytes sur le sketch. Gain additionnel d'environ 10% en RAM
+
+
 #include <SoftwareSerial.h>
 #include <OneWire.h>
 #include <Time.h>
