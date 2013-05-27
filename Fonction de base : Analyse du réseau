@@ -35,7 +35,7 @@ void loop()
     time_t time = now();
     if ((time-tempsPrecedentVeille) >= TEMPS_ATTENTE_VEILLE)
     {
-      reseauIndisponible();  // Vérification du réseau
+      reseauIndisponible(); // Vérification du réseau
       tempsPrecedentVeille = time;
     }
     /* else if (!veille && ((time-tempsPrecedentCapteur1) >= TEMPS_ATTENTE2))
@@ -71,7 +71,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
   }
 
   if (msg.indexOf("Call Ready")>=0) { // Le réseau mobile est disponible
-     Serial.println("*** Le module GPRS est maintenant enregistre sur le reseau. ***\n");
+     Serial.println("*** Le module GPRS recherche le reseau. ***\n");
      GPRS.println("AT+CMGF=1"); // Utilisation du mode texte pour la gestion des messages SMS
   }
   
@@ -152,20 +152,13 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
 {
   /* Commande pour vérifier l'enregistrement sur le réseau : AT+CREG? : datasheet p.77 */
   
-  char SerialInByte;
-  String message="";
+  GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
   
-  GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau 
   while (!GPRS.available());
-  while (GPRS.available())
-  {
-    SerialInByte = (unsigned char)GPRS.read(); // Réception du caractère envoyé par le module GPRS
-    if (SerialInByte != 10) // On ignore le caractère interligne (line feed)
-    {
-        message += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
-    }
-  }
-  veille = (message[19] != '1'); // Analyse du résultat
+  for (int i=0; i<21; i++) {
+  GPRS.read(); }
+  
+  veille = (GPRS.read() != 49); // Analyse du résultat
   
   if (veille == true) {
     Serial.println("*** Reseau indisponible, en veille ***");
