@@ -139,6 +139,8 @@ void loop ()
     if (intervalleCapteur1 & ((humiditeCapteur1 < SEUIL_BAS) | (humiditeCapteur1 > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
     {
         delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente de 6s
+        sens   =  i2cRead2bytes(81, 10); 
+        offset =  i2cRead2bytes(81, 12); 
         FreqCounter::f_comp= 8;             // Set compensation to 12 ??
         FreqCounter::start(1000);            // Gate Time de  1000ms
         while (FreqCounter::f_ready == 0)         // Attendre que le compteur soit prêt 
@@ -157,6 +159,8 @@ void loop ()
     else if (!intervalleCapteur1 & (humiditeCapteur1 > SEUIL_BAS) & (humiditeCapteur1 < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
     {
         delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente de 6s
+        sens   =  i2cRead2bytes(81, 10); 
+        offset =  i2cRead2bytes(81, 12); 
         FreqCounter::f_comp= 8;             // Set compensation to 12 ??
         FreqCounter::start(1000);            // Gate Time de  1000ms
         while (FreqCounter::f_ready == 0)         // Attendre que le compteur soit prêt 
