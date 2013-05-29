@@ -251,8 +251,6 @@ void traiterSMS(const String smsText)
 void envoyerUnMessage(const float temp, const boolean messageAutomatique, const int numeroCapteur)
 {
   delay(500);
-  GPRS.print("AT+CMGF=1\r\n"); // Préconfiguration du mode texte
-  delay(500);
 
   Serial.println("\n* ENVOI D'UN SMS");
 
