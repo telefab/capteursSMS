@@ -1,32 +1,31 @@
-#include "FreqCounter.h" // Optional (not required by this code)
-#include "Wire.h" // Required once to get the constants
+//#include "FreqCounter.h" 
+#include "Wire.h" 
 #include "HH10D.h"  //HH10D library
  
 using namespace std;
  
-HH10D humid(6); //Not using FreqCounter library
+HH10D humid(6); // Créer l'objet sur la broche voulue
  
 void setup()
 {
     Wire.begin();
-    humid.setup();   // Reads the constants from the EEPROM
-    humid.setSampleSize(2048); // Number of samples to average the humidity value
+    humid.setup();   // Utilise la librairie Wire pour lire les constantes de l'EEPROM
+    humid.setSampleSize(2048); // Détermine le nombre d'échantillons à évaluer pour calculer l'humidité relative moyenne
     Serial.begin(9600);
 }
  
 void loop()
 {
-    // Get RH
-    float rh = humid.getRH();
-    Serial.println(rh,2);
+    float humiditeRelative = humid.getRH(); // Calcul de l'humidité relative
+    Serial.println(humiditeRelative,2);
     delay(5000);
 }
  
-int main(void)
+/*int main(void)
 {
     init();
     setup();
     for (;;)
         loop();
     return 0;
-}
+}*/
