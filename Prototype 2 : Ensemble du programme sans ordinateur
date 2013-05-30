@@ -21,7 +21,7 @@ int nombre_capteurs = 0;
 int capteurMesure = 0;
 // Variables relatives au module GPRS
 SoftwareSerial GPRS (7, 8); // GPRS : relatif au shield GPRS ; Serial : relatif à l'ordinateur
-String phone_number = "+336********"; // Numéro par défaut
+String phone_number = "+33647877083"; // Numéro par défaut
 String msg = ""; // Mémoire tampon de la communication avec le module GPRS
 int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
 String numeroSMS;
