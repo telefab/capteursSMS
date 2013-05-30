@@ -5,8 +5,8 @@
 #include <Wire.h>
 #include <SoftwareSerial.h>
 
-#define SEUIL_BAS 10
-#define SEUIL_HAUT 30
+#define SEUIL_BAS 40
+#define SEUIL_HAUT 70
 #define TEMPS_ATTENTE 30                // En secondes
 #define TEMPS_ATTENTE_SECURITE 6        // En secondes
 
@@ -19,22 +19,19 @@ boolean intervalleCapteur1=true;
 SoftwareSerial GSM(7,8);           // GSM : relatif au shield GPRS ; Serial : relatif à l'ordinateur
 int ledGSM = 13;
 int onModulePin = 9;                // the pin to switch on the module (without press on button)
-String phone_number="+33647877083"; // ********* is the number to call
+String phone_number="+33699070417"; // ********* is the number to call
 
 
 
-int i2cRead2bytes(int deviceaddress, byte address) {
- // SET ADDRESS
+int i2cLecture(int deviceaddress, byte address) {
  Wire.beginTransmission(deviceaddress);
  Wire.write(address); 
  Wire.endTransmission();
- // REQUEST RETURN VALUE
  Wire.requestFrom(deviceaddress, 2);
- // COLLECT RETURN VALUE
  int rv = 0;
  for (int c = 0; c < 2; c++ )
  if (Wire.available()) rv = rv * 256 + Wire.read();
- return rv;
+ return rv; //Retourne les valeurs demandées
  }
 
 void switchGSMModule()
@@ -125,28 +122,24 @@ void setup()
 
 void loop ()
 {
-    sens   =  i2cRead2bytes(81, 10); 
-    offset =  i2cRead2bytes(81, 12); 
     //Pour obtenir la fréquence de sortie
-    FreqCounter::f_comp= 8;             // Set compensation to 12 ??
-    FreqCounter::start(1000);            // Gate Time de  1000ms
+    FreqCounter::f_comp= 8;             // Compensation à 8
+    FreqCounter::start(1000);            // Gate Time de 1000 ms
     while (FreqCounter::f_ready == 0)         // Attendre que le compteur soit prêt 
     freq=FreqCounter::f_freq;            // Lire le résultat
     //Calcul de humiditeCapteur1 (humidité relative)
-    humiditeCapteur1 =  (offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
+    humiditeCapteur1 =  (flaot)(offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
     Serial.println(humiditeCapteur1);
 
     if (intervalleCapteur1 & ((humiditeCapteur1 < SEUIL_BAS) | (humiditeCapteur1 > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
     {
         delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente de 6s
-        sens   =  i2cRead2bytes(81, 10); 
-        offset =  i2cRead2bytes(81, 12); 
-        FreqCounter::f_comp= 8;             // Set compensation to 12 ??
-        FreqCounter::start(1000);            // Gate Time de  1000ms
-        while (FreqCounter::f_ready == 0)         // Attendre que le compteur soit prêt 
-        freq=FreqCounter::f_freq;            // Lire le résultat
+        FreqCounter::f_comp= 8;             
+        FreqCounter::start(1000);            
+        while (FreqCounter::f_ready == 0)         
+        freq=FreqCounter::f_freq;            
         //Calcul de humiditeCapteur1 (humidité relative)
-        float humiditeCapteur1 =  (offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
+        float humiditeCapteur1 =  (float)(offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
         Serial.println(humiditeCapteur1);
 
         if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))                         // Seconde vérification
@@ -159,12 +152,10 @@ void loop ()
     else if (!intervalleCapteur1 & (humiditeCapteur1 > SEUIL_BAS) & (humiditeCapteur1 < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
     {
         delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente de 6s
-        sens   =  i2cRead2bytes(81, 10); 
-        offset =  i2cRead2bytes(81, 12); 
-        FreqCounter::f_comp= 8;             // Set compensation to 12 ??
-        FreqCounter::start(1000);            // Gate Time de  1000ms
-        while (FreqCounter::f_ready == 0)         // Attendre que le compteur soit prêt 
-        freq=FreqCounter::f_freq;            // Lire le résultat
+        FreqCounter::f_comp= 8;             
+        FreqCounter::start(1000);            
+        while (FreqCounter::f_ready == 0)          
+        freq=FreqCounter::f_freq;            
         //Calcul de humiditeCapteur1 (humidité relative)
         float humiditeCapteur1 =  (offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
         Serial.println(humiditeCapteur1);
