@@ -16,7 +16,7 @@ boolean intervalleCapteur1 = true;
 time_t tempsPrecedentCapteur1;
 // Variables relatives au module GPRS
 SoftwareSerial GPRS (7, 8); // GPRS : relatif au shield GPRS ; Serial : relatif à l'ordinateur
-String phone_number = "+336********"; // Numéro par défaut
+String phone_number = "+33647877083"; // Numéro par défaut
 String SIM_PIN_CODE = "0000"; // Code Pin de la carte SIM
 String msg = ""; // Mémoire tampon de la communication avec le module GPRS
 int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
