@@ -110,8 +110,8 @@ void setup()
     // Setup Capteurs
     Wire.begin();
     Serial.begin(9600);
-    sens   =  i2cRead2bytes(81, 10); // Lit la sensibilité de l'EEPROM (mémoire qui contient les facteurs d'étalonnage) via I2C
-    offset =  i2cRead2bytes(81, 12); // Lit l'offset de l'EEPROM
+    sens   =  i2cLecture(81, 10); // Lit la sensibilité de l'EEPROM (mémoire qui contient les facteurs d'étalonnage) via I2C
+    offset =  i2cLecture(81, 12); // Lit l'offset de l'EEPROM
 
     // Setup GSM
     GSM.begin(19200);                                      // UART baud GSM rate
