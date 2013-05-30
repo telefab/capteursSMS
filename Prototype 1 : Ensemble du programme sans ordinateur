@@ -1,135 +1,158 @@
-// Modifier Buffer Arduino : dans un terminal entrer la commande : sudo gedit /usr/share/arduino/libraries/SoftwareSerial/SoftwareSerial.h
-// Modifier la valeur de MAX_RX_BUFF à 256
-
-#include <OneWire.h>
 #include <SoftwareSerial.h>
-
+#include <OneWire.h>
+#include <Time.h>
 #define DS18B20 0x28
 #define BROCHE_ONEWIRE 4
 #define SEUIL_BAS 15.0
 #define SEUIL_HAUT 25.0
-#define TEMPS_ATTENTE 30
-#define TEMPS_ATTENTE_SECURITE 6
+#define TEMPS_ATTENTE 600 // Temps d'attente en secondes entre deux mesures de la température (en sec)
+#define TEMPS_ATTENTE_SECURITE 60 // Temps d'attente en secondes pour la mesure de vérification (en sec)
 
-// Variables capteurs
+// Variables relatives aux capteurs
 OneWire ds(BROCHE_ONEWIRE);
-byte adresseCapteur1 [8];           // Adresse du premier capteur
-float temperatureCapteur1= (SEUIL_BAS + SEUIL_HAUT) / 2;
-boolean intervalleCapteur1=true;
+byte adresseCapteur1 [8]; // Adresse du premier capteur
+float temperatureCapteur1 = (SEUIL_BAS + SEUIL_HAUT) / 2;
+boolean intervalleCapteur1 = true;
+time_t tempsPrecedentCapteur1;
+// Variables relatives au module GPRS
+SoftwareSerial GPRS (7, 8); // GPRS : relatif au shield GPRS ; Serial : relatif à l'ordinateur
+String phone_number = "+336********"; // Numéro par défaut
+String SIM_PIN_CODE = "0000"; // Code Pin de la carte SIM
+String msg = ""; // Mémoire tampon de la communication avec le module GPRS
+int CorpsSMS = false; // Est mis à 1 quand le prochain message du shield GPRS contiendra le contenu du SMS
+String numeroSMS;
+String numeroTemp = phone_number;
 
-// Variables relatives au shield GPRS
-SoftwareSerial GSM(7,8);           // GSM : relatif au shield GPRS ; Serial : relatif à l'ordinateur
-int ledGSM = 13;
-int onModulePin = 9;                // the pin to switch on the module (without press on button)
-String phone_number="+33647877083"; // ********* is the number to call
+void setup() {
+  GPRS.begin(19200); // Fréquence du module    
+  // Setup Capteurs
+  Serial.begin(9600); // Initialisation du port série
+  ds.reset();
+  ds.search(adresseCapteur1); // Recherche et stock l'adresse du capteur 1
+  tempsPrecedentCapteur1 = now();
+}
 
+void loop() {
+  if (GPRS.available()) {
+    executionGPRS(); }
+  else {
+    time_t time = now();
+    if ((time-tempsPrecedentCapteur1) >= TEMPS_ATTENTE)
+    {
+      mesureCapteur1();
+      tempsPrecedentCapteur1 = time;
+    }
+  }
+}
 
+void mesureCapteur1 () {
+    getTemperature (&temperatureCapteur1, adresseCapteur1); // Demande la température du capteur 1
+    if (intervalleCapteur1 & ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))) // On sort de l'intervalle acceptable
+    {
+        delay (TEMPS_ATTENTE_SECURITE*1000); // Attente
+        tempsPrecedentCapteur1 = now();
+        getTemperature (&temperatureCapteur1, adresseCapteur1);
+        if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT)) { // Seconde vérification
+            intervalleCapteur1=false;
+            envoyerUnMessage (temperatureCapteur1, true); }
+    }
+    else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT)) // On rentre à nouveau dans cet intervalle
+    {
+        delay (TEMPS_ATTENTE_SECURITE*1000); // Attente
+        tempsPrecedentCapteur1 = now();
+        getTemperature (&temperatureCapteur1, adresseCapteur1);
+        if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT)) { // Seconde vérification
+            intervalleCapteur1=true;
+            envoyerUnMessage (temperatureCapteur1, true);}
+    }
+}
 
-void getTemperature (float *temp, const byte addr[])
-{
+void getTemperature (float *temp, const byte addr[]) {
     byte data[2];
-
     ds.reset();
-    ds.select(addr);                // Sélectionne le capteur de température
-
-    ds.write(0x44,1);               // Lance la mesure de température
-    delay(800);
-    
-    ds.reset();                     // Reset pour envoyer maintenant la demande de lecture
+    ds.select(addr); // Sélectionne le capteur de température
+    ds.write(0x44,1); // Lance la mesure de température
+    delay(800); 
+    ds.reset(); // Reset pour envoyer maintenant la demande de lecture
     ds.select(addr);
-    ds.write(0xBE);                 // Demande de lecture du scratchpad
-
-    data[0] = ds.read();            // Lit les 2 premiers octets du scratchpad sur lesquels est contenue la température
+    ds.write(0xBE); // Demande de lecture du scratchpad
+    data[0] = ds.read(); // Lit les 2 premiers octets du scratchpad sur lesquels est contenue la température
     data[1] = ds.read();
     *temp = ((data[1] << 8) | data[0]) * 0.0625; // Conversion en degrés celsius
 }
 
-void switchGSMModule()
-{
-    digitalWrite(onModulePin,HIGH);
-    delay(2100);
-    digitalWrite(onModulePin,LOW);
-}
-
-boolean envoyerUnMessage(float temp, boolean intervalle)      // "intervalle" sert a différencier si est rentré ou sorti de l'intervalle de température
-{
-  switchGSMModule();                              // switches the GSM module ON
-  delay(500);
-  GSM.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
-  delay(20000);                               // Attente de l'établissement du réseau
-    
-  GSM.print("AT+CMGF=1\r\n");                 // sets the SMS mode to text
-  delay(1600);
-
-  GSM.print("AT+CMGS=\"");                     // send the SMS number
-  GSM.print(phone_number);
-  GSM.print("\"\r\n");
-  while(GSM.read()!='>');  
-  if (!intervalle)                             // SMS body, deux possibilités
-  {               
-    GSM.print("Attention, le seuil critique de temperature ");
-    GSM.print("dans le capteur 1 a ete atteint. La temperature");
-    GSM.print(" est de ");
-  } 
-  else 
-  {
-    GSM.print("La temperature est de nouveau acceptable. Elle est de ");
+void executionGPRS () {
+  char SerialInByte = (unsigned char)GPRS.read(); // Réception du caractère envoyé par le module GPRS      
+  if (SerialInByte == 13) { // Si le message se termine par un <CR> alors on traite le message
+    gestionCommunicationGPRS();
   }
-  GSM.print(temp, 2);
-  GSM.print(" degres celsius.");           // Fin SMS body
+  else if (SerialInByte != 10) { // On ignore le caractère interligne (line feed)
+    msg += String(SerialInByte); // Stockage du caractère dans la mémoire tampon
+  }
+}
 
+void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit en conséquence
+{
+  if (msg.indexOf("+CPIN: SIM PIN")>=0) { // Demande du code Pin de la carte SIM
+     GPRS.print("AT+CPIN="); // Envoi du code Pin
+     GPRS.println( SIM_PIN_CODE );
+  }
+  if (msg.indexOf("Call Ready")>=0) { // Le réseau mobile recherche le réseau
+     GPRS.println("AT+CMGF=1"); // Utilisation du mode texte pour la gestion des messages SMS
+  } 
+  // Opérations relatives à la réception d'un SMS 
+  if (msg.indexOf("+CMTI")>= 0) { // Phase 1 : début de réception d'un SMS
+     int iPos = msg.indexOf(",");
+     numeroSMS = msg.substring(iPos+1);
+     GPRS.print("AT+CMGR="); // Demande de lecture des informations du message
+     GPRS.println(numeroSMS);
+  } 
+  if (msg.indexOf("+CMGR:")>=0) { // Phase 2 : réception du numéro de l'expéditeur
+     int iPos = msg.indexOf("+33");
+     numeroTemp = msg.substring(iPos, iPos+12);
+     CorpsSMS = true;
+     msg = "";
+    return; // Le prochain message contiendra le corps du SMS
+  }  
+  if (CorpsSMS == 1) { // Phase 3 : corps du SMS
+    traiterSMS(msg); // Traitement du corps du message
+    GPRS.print("AT+CMGD="); // Suppression du SMS pour ne pas encombrer la carte SIM
+    GPRS.println(numeroSMS);
+  } 
+  msg = ""; // Efface le contenu de la mémoire tampon des messages du GPRS shield.
+  CorpsSMS = false;
+}
+
+void traiterSMS(const String smsText) {
+    if (smsText.indexOf("Temp 1")>=0) { // Demande d'envoi de la température du capteur 1
+       phone_number = numeroTemp; // Remplacement du numéro
+       envoyerUnMessage (temperatureCapteur1, false);
+    }
+    // Le message ne peut pas être décodé
+}
+
+void envoyerUnMessage(const float temp, const boolean messageAutomatique) {
   delay(500);
-  GSM.write(0x1A);                         // Sends ++
-  GSM.write(0x0D);
-  GSM.write(0x0A);
-  delay(20000);
-
-  switchGSMModule();                      // Switch OFF module GSM
-  return true;
-}
-
-void setup()
-{
-    // Setup Capteurs
-    Serial.begin(9600);                                     // Initialisation du port série
-    ds.reset();
-    ds.search(adresseCapteur1);                             // Recherche et stock l'adresse du capteur 1
-
-    // Setup GSM
-    GSM.begin(19200);                                      // UART baud GSM rate
-    delay(100);
-    pinMode(ledGSM, OUTPUT);
-    pinMode(onModulePin, OUTPUT);
-}
-
-void loop ()
-{
-    getTemperature (&temperatureCapteur1, adresseCapteur1);                                                 // Demande la température du capteur 1
-
-
-    if (intervalleCapteur1 & ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT)))      // On sort de l'intervalle acceptable 
-    {
-        delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente d'une minute
-        getTemperature (&temperatureCapteur1, adresseCapteur1);
-        if ((temperatureCapteur1 < SEUIL_BAS) | (temperatureCapteur1 > SEUIL_HAUT))                         // Seconde vérification
-        {
-            if(envoyerUnMessage (temperatureCapteur1,false)){
-            intervalleCapteur1=false;
-            }
-        }
+  GPRS.print("AT+CMGS=\""); // Parametrage du numéro
+  GPRS.print(phone_number);
+  GPRS.print("\"\r\n");
+  while(GPRS.read()!='>'); 
+  if (messageAutomatique) { // Corps du SMS : 3 possibilités
+    if (!intervalleCapteur1) {
+      GPRS.print("Attention, le seuil critique de temperature ");
+      GPRS.print("dans le capteur 1 a ete atteint. La temperature");
+      GPRS.print(" est de ");
     }
-    else if (!intervalleCapteur1 & (temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))   // On rentre à nouveau dans cet intervalle
-    {
-        delay (TEMPS_ATTENTE_SECURITE*1000);                                                                                      // Attente d'une minute
-        getTemperature (&temperatureCapteur1, adresseCapteur1);
-        if ((temperatureCapteur1 > SEUIL_BAS) & (temperatureCapteur1 < SEUIL_HAUT))                         // Seconde vérification
-        {
-            if(envoyerUnMessage (temperatureCapteur1,true)){
-            intervalleCapteur1=true;
-            }
-        }
-    }
-
-    delay (TEMPS_ATTENTE*1000);                                                                                         // Attends 10 min avant de recommencer
-}
-
+    else {
+      GPRS.print("La temperature est de nouveau acceptable. Elle est de "); }
+  }
+  else {
+    GPRS.print("La temperature dans le capteur 1 est de ") ; }
+  GPRS.print(temp, 2);
+  GPRS.print(" degres celsius.");
+  delay(500);
+  GPRS.write(0x1A); // Finalisation du SMS et envoi
+  GPRS.write(0x0D);
+  GPRS.write(0x0A);
+  delay(25000);
+} 
