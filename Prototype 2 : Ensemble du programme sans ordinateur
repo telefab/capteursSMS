@@ -203,7 +203,7 @@ void envoyerUnMessage(const float temp, const boolean messageAutomatique, const 
   delay(20000);
 }
 
-void reseauIndisponible()
+void reseauIndisponible() // Gère le réseau mobile
 {
   GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
   while (!GPRS.available());
