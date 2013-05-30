@@ -1,4 +1,4 @@
-
+//Broche 5
 #include <FreqCounter.h>
 #include <Wire.h>
 int freq, offset, sens;
