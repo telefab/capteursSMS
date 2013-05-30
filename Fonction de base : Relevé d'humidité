@@ -1,4 +1,4 @@
-//Broche 5
+//Broche 5 voir librairie FreqCounter
 #include <FreqCounter.h>
 #include <Wire.h>
 int freq, offset, sens;
