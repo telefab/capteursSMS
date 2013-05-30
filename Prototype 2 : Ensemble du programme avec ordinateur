@@ -289,7 +289,7 @@ void envoyerUnMessage(const float temp, const boolean messageAutomatique, const 
   delay(20000);
 }
 
-void reseauIndisponible() // Renvoi true si le réseau est indisponible, false sinon // Fonction à refaire pour prendre moins de mémoire
+void reseauIndisponible() // Gère le réseau mobile
 {
   /* Commande pour vérifier l'enregistrement sur le réseau : AT+CREG? : datasheet p.77 */
   
