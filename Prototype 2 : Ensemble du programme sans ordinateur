@@ -5,9 +5,9 @@
 #define BROCHE_ONEWIRE 4
 #define SEUIL_BAS 15.0
 #define SEUIL_HAUT 25.0
-#define TEMPS_ATTENTE 600 // Temps d'attente en secondes entre deux mesures de la température (en sec)
-#define TEMPS_ATTENTE_SECURITE 60 // Temps d'attente en secondes pour la mesure de vérification (en sec)
-#define TEMPS_ATTENTE_VEILLE 60 // Temps d'attente en secondes entre deux vérifications du réseau (en sec)
+#define TEMPS_ATTENTE 600 // Temps d'attente entre deux mesures de la température (en sec)
+#define TEMPS_ATTENTE_SECURITE 60 // Temps d'attente pour la mesure de vérification (en sec)
+#define TEMPS_ATTENTE_VEILLE 60 // Temps d'attente entre deux vérifications du réseau mobile (en sec)
 #define NOMBRE_CAPTEURS_MAX 10 // Nombre maximum de capteurs en série autorisé (valeur >= 1)
 #define SIM_PIN_CODE "0000" // Code Pin de la carte SIM
 
