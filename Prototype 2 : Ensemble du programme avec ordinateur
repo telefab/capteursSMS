@@ -299,7 +299,7 @@ void reseauIndisponible() // Renvoi true si le réseau est indisponible, false s
   for (int i=0; i<21; i++) {
   GPRS.read(); }
   
-  veille = (GPRS.read() != 49); // Analyse du résultat
+  veille = GPRS.read() != 49 and GPRS.read() != 49; // Analyse du résultat
   
   if (veille) {
     Serial.println("* Reseau perdu");
