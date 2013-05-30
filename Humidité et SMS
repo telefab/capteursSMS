@@ -157,7 +157,7 @@ void loop ()
         while (FreqCounter::f_ready == 0)          
         freq=FreqCounter::f_freq;            
         //Calcul de humiditeCapteur1 (humidité relative)
-        float humiditeCapteur1 =  (offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
+        float humiditeCapteur1 =  (float)(offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
         Serial.println(humiditeCapteur1);
 
         if ((humiditeCapteur1 > SEUIL_BAS) & (humiditeCapteur1 < SEUIL_HAUT))                         // Seconde vérification
