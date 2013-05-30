@@ -1,38 +1,32 @@
-#include <FreqCounter.h> // 
-#include <Wire.h>
-
-http://tushev.org
-
-int freq, offset, sens;
-
-void setup(){
- Wire.begin();
- Serial.begin(9600);
- sens   =  i2cRead2bytes(81, 10); // Lit la sensibilité de l'EEPROM (mémoire qui contient les facteurs d'étalonnage) via I2C
- offset =  i2cRead2bytes(81, 12); // Lit l'offset de l'EEPROM
+#include "FreqCounter.h" // Optional (not required by this code)
+#include "Wire.h" // Required once to get the constants
+#include "HH10D.h"  //HH10D library
+ 
+using namespace std;
+ 
+HH10D humid(6); //Not using FreqCounter library
+ 
+void setup()
+{
+    Wire.begin();
+    humid.setup();   // Reads the constants from the EEPROM
+    humid.setSampleSize(2048); // Number of samples to average the humidity value
+    Serial.begin(9600);
 }
-
-void loop(){
- //Pour obtenir la fréquence de sortie
- FreqCounter::f_comp= 8;             // Set compensation to 12 ??
- FreqCounter::start(1000);            // Gate Time de  1000ms
- while (FreqCounter::f_ready == 0)         // Attendre que le compteur soit prêt 
- freq=FreqCounter::f_freq;            // Lire le résultat
- //Calcul de HR (humidité relative)
- float HR =  (offset-freq)*sens/4096; // Calcul de l'humidité relative selon la formule donnée par le datasheet du capteur
- Serial.println(HR);
+ 
+void loop()
+{
+    // Get RH
+    float rh = humid.getRH();
+    Serial.println(rh,2);
+    delay(5000);
 }
-
-int i2cRead2bytes(int deviceaddress, byte address) {
- // SET ADDRESS
- Wire.beginTransmission(deviceaddress);
- Wire.send(address); 
- Wire.endTransmission();
- // REQUEST RETURN VALUE
- Wire.requestFrom(deviceaddress, 2);
- // COLLECT RETURN VALUE
- int rv = 0;
- for (int c = 0; c < 2; c++ )
- if (Wire.available()) rv = rv * 256 + Wire.receive();
- return rv;
- }
+ 
+int main(void)
+{
+    init();
+    setup();
+    for (;;)
+        loop();
+    return 0;
+}
