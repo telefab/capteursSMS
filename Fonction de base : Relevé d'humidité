@@ -1,26 +1,32 @@
-//Broche 5 voir librairie FreqCounter
+// Le capteur d'humidité est branché sur la broche 5
 #include <FreqCounter.h>
 #include <Wire.h>
+#define TEMPS_ATTENTE 5 // Temps d'attente entre deux mesures (en secondes)
+
 int freq, offset, sens;
 
-void setup(){
+void setup()
+{
  Wire.begin();
  Serial.begin(9600);
- sens   =  i2cLecture(81, 10); //Lit la sensibilité sur l'EEPROM (mémoire qui contient les facteurs d'étalonnage) via I2C
- offset =  i2cLecture(81, 12); //Lit l'offset sur l'EEPROM
+ sens   =  i2cLecture(81, 10); // Lit la sensibilité sur l'EEPROM (mémoire qui contient les facteurs d'étalonnage) via I2C
+ offset =  i2cLecture(81, 12); // Lit l'offset sur l'EEPROM
 }
 
-void loop() {
- 
- //Lecture de la fréquence 
+void loop() 
+{
+ // Lecture de la fréquence 
  FreqCounter::f_comp= 8;             // Compensation à 8
  FreqCounter::start(1000);            // Gatetime de 1000ms
  while (FreqCounter::f_ready == 0)         // Attendre que le compteur soit prêt
  freq=FreqCounter::f_freq;  // Lit le résultat
  
- //Calcul de l'humidité relative
+ // Calcul de l'humidité relative
  float RH =  (float)(offset-freq)*sens/4096; // Opération donnée par le datasheet
- Serial.println(RH);
+ Serial.print("Taux d'humidite : ");
+ Serial.print(RH);
+ Serial.println(" %");
+ delay(TEMPS_ATTENTE*1000);
 }
 
 int i2cLecture(int deviceaddress, byte address)  
@@ -30,7 +36,7 @@ int i2cLecture(int deviceaddress, byte address)
  Wire.endTransmission();
  Wire.requestFrom(deviceaddress, 2); 
  int rv = 0;
- for (int c = 0; c < 2; c++ )
+ for (int c=0; c<2; c++ )
  if (Wire.available()) rv = rv * 256 + Wire.read();
- return rv; //Retoune les valeurs demandées 
+ return rv;
  }
