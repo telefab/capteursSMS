@@ -1,6 +1,6 @@
 #include <OneWire.h>
 #define DS18B20 0x28
-#define BROCHE_ONEWIRE 4
+#define BROCHE_ONEWIRE 4 // Broche sur laquelle se trouve le bus One-Wire
 
 #define NOMBRE_CAPTEURS_MAX 10 // Nombre maximum de capteurs en série autorisé (valeur >= 1)
 #define TEMPS_ATTENTE 30 // Temps d'attente entre deux mesures du meme capteur en secondes
@@ -55,7 +55,7 @@ void setup()
     while ((nombre_capteurs < NOMBRE_CAPTEURS_MAX) && (ds.search(adresseCapteurs[nombre_capteurs]))) // Recherche des différents capteurs
     {
       nombre_capteurs++;
-      Serial.print("\nCapteur "); // Affichage des infos du capteur à l'ordinateur
+      Serial.print("\nCapteur "); // Affichage des adresses des capteurs à l'ordinateur
       Serial.print(nombre_capteurs);
       Serial.print(" : ");
       for(i=0; i < 8; i++)
@@ -64,7 +64,7 @@ void setup()
         Serial.print(" ");
       }
     }
-    Serial.print("\nAu total, ");
+    Serial.print("\nAu total, "); // Affichage du nombre de capteurs détecté
     Serial.print(nombre_capteurs);
     Serial.println(" capteurs ont ete reconnus.\n");
 }
