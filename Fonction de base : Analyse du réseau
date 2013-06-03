@@ -2,50 +2,62 @@
 #include <Time.h>
 #define TEMPS_ATTENTE_VEILLE 20 // Temps d'attente en secondes entre vérifications du réseau
 
-SoftwareSerial GPRS (7, 8); // GPRS : relatif au shield GPRS ; Serial : relatif à l'ordinateur
+SoftwareSerial GPRS (7, 8); // mySerial : relatif au shield GPRS ; Serial : relatif à l'ordinateur
+String SIM_PIN_CODE = "0000"; // Code Pin de la carte SIM
+String msg = ""; // Mémoire tampon de la communication avec le module GPRS
 boolean veille = true;
 time_t tempsPrecedentVeille;
-
-void switchGSMModule()
-{
-  digitalWrite(onModulePin,HIGH);
-  delay(2100);
-  digitalWrite(onModulePin,LOW);
-}
 
 void setup()
 {
   GPRS.begin(19200); // Fréquence du module
-  Serial.begin(19200);
-  pinMode(ledGSM, OUTPUT);
-  pinMode(onModulePin, OUTPUT);
-  switchGSMModule();                              // switches the GSM module ON
-  delay(500);
-  GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
-  delay(1000);                               // Attente de l'établissement du réseau
-  
+  Serial.begin(19200); 
   tempsPrecedentVeille = now();
 }
 
 void loop()
 {
-  time_t time = now();
-  if ((time-tempsPrecedentVeille) >= TEMPS_ATTENTE_VEILLE)
-  {
-    reseauIndisponible(); // Vérification du réseau
-    tempsPrecedentVeille = time;
+  if (GPRS.available()) {
+    executionGPRS();
+  }
+  else {
+    time_t time = now();
+    if ((time-tempsPrecedentVeille) >= TEMPS_ATTENTE_VEILLE)
+    {
+      reseauIndisponible(); // Vérification du réseau
+      tempsPrecedentVeille = time;
+    }
   }
 }
 
+void executionGPRS ()
+{
+  char SerialInByte = (unsigned char)GPRS.read(); // Réception du caractère envoyé par le module GPRS      
+  if (SerialInByte == 13) { // Si le message se termine par un <CR> alors on traite le message
+    gestionCommunicationGPRS();
+  }
+  else if (SerialInByte != 10) {
+    msg += String(SerialInByte);
+  }
+}
+
+void gestionCommunicationGPRS ()
+{
+  if (msg.indexOf("+CPIN: SIM PIN")>=0) { // Demande du code Pin de la carte SIM
+     Serial.println("*** Envoi du code Pin... ***");
+     GPRS.print("AT+CPIN="); // Envoi du code Pin
+     GPRS.println( SIM_PIN_CODE );
+  }
+  msg = ""; // Efface le contenu de la mémoire tampon des messages du GPRS shield.
+}
+
 void reseauIndisponible() // Gère le réseau mobile
-{  
+{
   GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
   while (!GPRS.available());
-  for (int i=0; i<21; i++) {
-  GPRS.read(); }
+  while (GPRS.read() != 44); // Jusqu'à la virgule ','
   
-  veille = GPRS.read() != 49 and GPRS.read() != 49; // Analyse du résultat
-  
+  veille = GPRS.read() != 49; // Analyse du résultat 
   if (veille) {
     Serial.println("*** Reseau indisponible, en veille ***");
   }
