@@ -22,7 +22,7 @@ void setup()
   switchGSMModule();                              // switches the GSM module ON
   delay(500);
   GPRS.print("AT+CPIN=\"0000\"\r\n");           // Entrer le code PIN
-  delay(20000);                               // Attente de l'établissement du réseau
+  delay(1000);                               // Attente de l'établissement du réseau
   
   tempsPrecedentVeille = now();
 }
