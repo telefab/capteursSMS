@@ -207,7 +207,6 @@ void reseauIndisponible() // Gère le réseau mobile
 {
   GPRS.print("AT+CREG?\r\n"); // Demande de l'enregistrement sur le réseau
   while (!GPRS.available());
-  for (int i=0; i<21; i++) {
-  GPRS.read(); }  
-  veille = GPRS.read() != 49 and GPRS.read() != 49; // Analyse du résultat
+  while (GPRS.read() != 44); // Jusqu'à la virgule ','  
+  veille = GPRS.read() != 49; // Analyse du résultat : '1' ou pas
 }
