@@ -156,6 +156,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
     traiterSMS(msg); // Traitement du corps du message
     GPRS.print("AT+CMGD="); // Suppression du SMS pour ne pas encombrer la carte SIM
     GPRS.println(numeroSMS);
+    delay(1000);
   }  
   msg = ""; // Efface le contenu de la mémoire tampon des messages du GPRS shield.
   CorpsSMS = false;
@@ -166,7 +167,7 @@ void traiterSMS(const String smsText) {
       if (smsText.indexOf("Temp "+String(i+1)) >= 0) { // Demande d'envoi de la température du capteur i
          phone_number = numeroTemp; // Remplacement du numéro
          envoyerUnMessage (temperatureCapteurs[i], false, i+1);
-         delay(5000);
+         delay(1000);
       }
     }
 }
