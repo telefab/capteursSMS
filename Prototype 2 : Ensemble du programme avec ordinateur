@@ -223,6 +223,7 @@ void gestionCommunicationGPRS () // Interprete le message du GPRS shield et agit
     traiterSMS(msg); // Traitement du corps du message
     GPRS.print("AT+CMGD="); // Suppression du SMS pour ne pas encombrer la carte SIM
     GPRS.println(numeroSMS);
+    delay(1000);
   }
   
   msg = ""; // Efface le contenu de la mémoire tampon des messages du GPRS shield.
@@ -240,7 +241,7 @@ void traiterSMS(const String smsText)
          envoyerUnMessage (temperatureCapteurs[i], false, i+1);
          Serial.println("* Message envoye avec succes\n");
          decode = true;
-         delay(5000);
+         delay(1000);
       }
     }
     if (!decode) {
